@@ -14,6 +14,8 @@ Each coaching framework is packaged as a **skill** — a JSON definition paired 
 
 ## Architecture
 
+[Interactive architecture diagram](architecture.html) — open locally to explore data flows.
+
 ```
 sports-coaching-skills/
 ├── mcp-server/          # Node.js MCP server (validation + semantic search)
