@@ -1,0 +1,23 @@
+[project]
+name = "soccer-diagrams"
+version = "0.1.0"
+description = "MCP server for soccer tactical diagrams and session PDF generation"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.0.0",
+    "mplsoccer>=1.4.0",
+    "matplotlib>=3.8",
+    "pydantic>=2.0",
+    "reportlab>=4.0",
+    "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

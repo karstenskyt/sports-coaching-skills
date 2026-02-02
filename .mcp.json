@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "coaching-skills": {
+      "command": "node",
+      "args": ["mcp-server/dist/index.js"]
+    },
+    "soccer-diagrams": {
+      "command": "diagram-server/.venv/Scripts/python.exe",
+      "args": ["-m", "soccer_diagrams.server"],
+      "cwd": "diagram-server"
+    }
+  }
+}

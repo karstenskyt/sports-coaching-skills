@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm install)",
+      "Bash(npx tsc)",
+      "Bash(npx ts-node:*)",
+      "Bash(node:*)",
+      "Bash(printf:*)",
+      "mcp__coaching-skills__search_*",
+      "mcp__coaching-skills__list_*",
+      "mcp__coaching-skills__validate_*",
+      "mcp__soccer-diagrams__render_tactical_diagram",
+      "mcp__soccer-diagrams__evaluate_session_plan",
+      "mcp__soccer-diagrams__compile_to_pdf",
+      "Bash(cd \"D:\\\\Development\\\\karstenskyt__soccer-skills\\\\diagram-server\" && uv run pytest:*)",
+      "Bash(cd \"D:\\\\Development\\\\karstenskyt__soccer-skills\\\\diagram-server\" && uv sync:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run python:*)",
+      "Bash(tree:*)",
+      "Bash(start:*)",
+      "Bash(npx tsc:*)",
+      "Bash(where:*)",
+      "Bash(echo:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(tasklist /FI \"WINDOWTITLE eq *mcp*\" /FO CSV)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "coaching-skills",
+    "soccer-diagrams"
+  ]
+}

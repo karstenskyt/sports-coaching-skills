@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Build output
+dist/
+
+# Environment
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated output (diagrams, PDFs, evaluations) — keep folder, ignore contents
+output/**
+!output/**/
+!output/**/.gitkeep
+
+# Source materials (copyrighted PDFs, transcripts) — keep folder, ignore contents
+resources/**
+!resources/**/
+!resources/**/.gitkeep
+
+# Pre-built vector indices (large, reproducible via build-index)
+data/
+
+# Skill definitions (contain principle descriptions derived from source materials)
+skills/*.json
+
+# Sample files (session plans, transcripts) — keep folder, ignore contents
+samples/**
+!samples/**/
+!samples/**/.gitkeep
+
+# Root-level PDF blueprints
+*.pdf
+
+# OS / editor artifacts
+nul
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
