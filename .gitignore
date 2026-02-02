@@ -12,6 +12,7 @@ dist/
 __pycache__/
 *.pyc
 .pytest_cache/
+uv.lock
 
 # Generated output (diagrams, PDFs, evaluations) — keep folder, ignore contents
 output/**

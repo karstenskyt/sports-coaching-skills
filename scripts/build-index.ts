@@ -84,12 +84,63 @@ function chunkText(
   return chunks;
 }
 
-// --- Transcript (.segments) ingestion ---
+// --- Transcript ingestion (SRT, VTT, JSON/.segments) ---
 
 interface Segment {
   start: number;
   end: number;
   text: string;
+}
+
+const TRANSCRIPT_EXTENSIONS = [".srt", ".vtt", ".json", ".segments"];
+
+function isTranscriptFile(filename: string): boolean {
+  const lower = filename.toLowerCase();
+  return TRANSCRIPT_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function parseSrtTimestamp(ts: string): number {
+  // 00:01:23,456 → seconds
+  const [h, m, rest] = ts.split(":");
+  const [s, ms] = rest.split(",");
+  return parseInt(h) * 3600 + parseInt(m) * 60 + parseInt(s) + parseInt(ms) / 1000;
+}
+
+function parseSrt(raw: string): Segment[] {
+  const segments: Segment[] = [];
+  const blocks = raw.trim().split(/\n\s*\n/);
+  for (const block of blocks) {
+    const lines = block.trim().split("\n");
+    if (lines.length < 3) continue;
+    const timeLine = lines[1];
+    const match = timeLine.match(
+      /(\d{2}:\d{2}:\d{2}[,\.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,\.]\d{3})/
+    );
+    if (!match) continue;
+    const start = parseSrtTimestamp(match[1].replace(".", ","));
+    const end = parseSrtTimestamp(match[2].replace(".", ","));
+    const text = lines.slice(2).join(" ").replace(/<[^>]*>/g, "").trim();
+    if (text) segments.push({ start, end, text });
+  }
+  return segments;
+}
+
+function parseVtt(raw: string): Segment[] {
+  // Strip WEBVTT header and optional metadata lines
+  const body = raw.replace(/^WEBVTT[^\n]*\n/, "").replace(/^NOTE[^\n]*\n(\n|[^\n])*?\n\n/gm, "");
+  return parseSrt(body);
+}
+
+function parseJsonSegments(raw: string): Segment[] {
+  const data = JSON.parse(raw);
+  // Support both flat arrays and {segments: [...]} wrapper objects
+  const arr = Array.isArray(data) ? data : Array.isArray(data.segments) ? data.segments : null;
+  if (!arr) throw new Error("Expected JSON array or object with 'segments' array");
+  return arr.map((s: any) => ({
+    start: Number(s.start) || 0,
+    end: Number(s.end) || 0,
+    text: String(s.text || ""),
+  }));
 }
 
 function chunkTranscript(
@@ -169,14 +220,24 @@ async function ingestPdf(filePath: string): Promise<Chunk[]> {
   return chunkText(pdfData.text, pageTexts, fileName);
 }
 
-// --- Segments ingestion ---
+// --- Transcript file ingestion ---
 
-function ingestSegments(filePath: string): Chunk[] {
+function ingestTranscript(filePath: string): Chunk[] {
   const fileName = path.basename(filePath);
+  const ext = path.extname(filePath).toLowerCase();
   console.log(`  Reading transcript: ${fileName}`);
 
   const raw = fs.readFileSync(filePath, "utf-8");
-  const segments: Segment[] = JSON.parse(raw);
+  let segments: Segment[];
+
+  if (ext === ".srt") {
+    segments = parseSrt(raw);
+  } else if (ext === ".vtt") {
+    segments = parseVtt(raw);
+  } else {
+    // .json or .segments — JSON array format
+    segments = parseJsonSegments(raw);
+  }
 
   console.log(`    ${segments.length} segments`);
 
@@ -192,21 +253,22 @@ async function main() {
 
   if (!fs.existsSync(resourcesDir)) {
     console.error(`Resources directory not found: ${resourcesDir}`);
-    console.error(`Create it and add PDF/.segments files, then re-run.`);
+    console.error(`Create it and add PDF/transcript files, then re-run.`);
     process.exit(1);
   }
 
   const files = fs.readdirSync(resourcesDir);
   const pdfFiles = files.filter((f) => f.toLowerCase().endsWith(".pdf"));
-  const segmentFiles = files.filter((f) => f.toLowerCase().endsWith(".segments"));
+  const transcriptFiles = files.filter((f) => isTranscriptFile(f));
 
-  if (pdfFiles.length === 0 && segmentFiles.length === 0) {
-    console.error(`No .pdf or .segments files found in ${resourcesDir}`);
+  if (pdfFiles.length === 0 && transcriptFiles.length === 0) {
+    console.error(`No supported files found in ${resourcesDir}`);
+    console.error(`Supported: .pdf, .srt, .vtt, .json, .segments`);
     process.exit(1);
   }
 
   console.log(`\nBuilding index for skill: ${skill}`);
-  console.log(`Resources: ${pdfFiles.length} PDFs, ${segmentFiles.length} transcripts`);
+  console.log(`Resources: ${pdfFiles.length} PDFs, ${transcriptFiles.length} transcripts`);
 
   // Ingest all files
   let allChunks: Chunk[] = [];
@@ -216,8 +278,8 @@ async function main() {
     allChunks.push(...chunks);
   }
 
-  for (const sf of segmentFiles) {
-    const chunks = ingestSegments(path.join(resourcesDir, sf));
+  for (const tf of transcriptFiles) {
+    const chunks = ingestTranscript(path.join(resourcesDir, tf));
     allChunks.push(...chunks);
   }
 
@@ -273,7 +335,7 @@ async function main() {
   }
 
   console.log(`\nDone! Index written to ${indexPath}`);
-  console.log(`${allChunks.length} chunks from ${pdfFiles.length + segmentFiles.length} files`);
+  console.log(`${allChunks.length} chunks from ${pdfFiles.length + transcriptFiles.length} files`);
   console.log(`\nNext: ensure skills/${skill}.json exists, then rebuild the MCP server with 'npm run build'`);
 }
 

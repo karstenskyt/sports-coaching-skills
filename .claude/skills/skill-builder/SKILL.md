@@ -10,7 +10,7 @@ Creates new coaching/analysis skills from resource documents (PDFs, transcripts)
 
 ## Prerequisites
 - Resource documents must be placed in `resources/<skill-name>/`
-- Supported formats: `.pdf` (books, articles), `.segments` (JSON transcripts with timestamped segments)
+- Supported formats: `.pdf` (books, articles), `.srt` / `.vtt` (subtitle transcripts), `.json` (timestamped segments)
 
 ## Workflow: Creating a New Skill
 
@@ -22,7 +22,7 @@ Run the build-index script:
 ```
 npm run build-index -- --skill <skill-name>
 ```
-This reads all `.pdf` and `.segments` files, chunks them, embeds with all-MiniLM-L6-v2, and stores in `data/<skill-name>/index.json`.
+This reads all `.pdf` and transcript files (`.srt`, `.vtt`, `.json`), chunks them, embeds with all-MiniLM-L6-v2, and stores in `data/<skill-name>/index.json`.
 
 ### Step 3: Explore the content
 After ingestion, the vector index is available. Read sample passages to understand the author's key themes, frameworks, and principles. Optionally search online for additional context about the author.
@@ -94,6 +94,6 @@ Check `skills/` directory for all skill definitions. Check `data/` for which hav
 
 ## Notes
 - Resource documents in `resources/` are only needed during ingestion. All knowledge is stored in the vector database for runtime retrieval.
-- The `.segments` format is JSON arrays of `{start, end, text}` objects (e.g., from speech-to-text transcription).
+- Transcripts can be `.srt` (SubRip), `.vtt` (WebVTT), or `.json` arrays of `{start, end, text}` objects.
 - Each skill's vector index is independent. Rebuilding one doesn't affect others.
 - The MCP server serves ALL skills from a single process.

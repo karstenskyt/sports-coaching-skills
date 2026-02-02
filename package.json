@@ -1,7 +1,7 @@
 {
-  "name": "soccer-skills",
+  "name": "sports-coaching-skills",
   "version": "1.0.0",
-  "description": "Multi-skill soccer coaching platform with local vector search",
+  "description": "Multi-skill coaching platform with local vector search and session validation",
   "scripts": {
     "build": "cd mcp-server && npx tsc",
     "build-index": "node --max-old-space-size=4096 -r ts-node/register scripts/build-index.ts",
