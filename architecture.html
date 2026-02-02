@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sports Coaching Skills — Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: #2e3345;
+    --text: #c9cdd8;
+    --text-dim: #6b7280;
+    --accent-blue: #3b82f6;
+    --accent-green: #22c55e;
+    --accent-purple: #a855f7;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-teal: #14b8a6;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  header h1 span { color: var(--accent-blue); }
+
+  .controls {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .flow-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .flow-btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .flow-btn.active { border-color: var(--accent-blue); color: #fff; background: rgba(59,130,246,0.12); }
+  .flow-btn[data-flow="indexing"].active { border-color: var(--accent-orange); background: rgba(245,158,11,0.12); }
+  .flow-btn[data-flow="validation"].active { border-color: var(--accent-green); background: rgba(34,197,94,0.12); }
+  .flow-btn[data-flow="diagrams"].active { border-color: var(--accent-purple); background: rgba(168,85,247,0.12); }
+  .flow-btn[data-flow="pdf"].active { border-color: var(--accent-red); background: rgba(239,68,68,0.12); }
+
+  .legend {
+    margin-left: auto;
+    display: flex;
+    gap: 14px;
+    font-size: 11px;
+    color: var(--text-dim);
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  main {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  svg {
+    width: 100%;
+    max-width: 1100px;
+    height: auto;
+  }
+
+  /* SVG styles */
+  .node {
+    transition: opacity 0.3s, filter 0.3s;
+  }
+
+  .node rect, .node path {
+    transition: stroke 0.3s, stroke-width 0.3s;
+  }
+
+  .edge {
+    transition: opacity 0.3s;
+  }
+
+  .dimmed { opacity: 0.12; }
+  .highlighted { opacity: 1; filter: drop-shadow(0 0 8px rgba(255,255,255,0.1)); }
+
+  .flow-arrow {
+    stroke-dasharray: 8 4;
+    animation: dash 0.8s linear infinite;
+  }
+
+  @keyframes dash {
+    to { stroke-dashoffset: -12; }
+  }
+
+  /* Info panel */
+  .info-bar {
+    border-top: 1px solid var(--border);
+    padding: 16px 28px;
+    min-height: 64px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .info-bar .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+
+  .info-bar .detail {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .info-bar .detail code {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 12px;
+    background: var(--surface2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent-teal);
+  }
+
+  .step-indicator {
+    display: inline-block;
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--accent-blue);
+    margin-right: 4px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>Sports Coaching Skills</span> — Architecture</h1>
+  <div class="controls">
+    <button class="flow-btn active" data-flow="overview">Overview</button>
+    <button class="flow-btn" data-flow="indexing">Indexing Pipeline</button>
+    <button class="flow-btn" data-flow="validation">Validation Flow</button>
+    <button class="flow-btn" data-flow="diagrams">Diagram Rendering</button>
+    <button class="flow-btn" data-flow="pdf">PDF Compilation</button>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>MCP Protocol</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div>Indexing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div>Validation</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple)"></div>Diagrams</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-red)"></div>PDF</div>
+  </div>
+</header>
+
+<main>
+<svg viewBox="0 0 1100 680" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#3b82f6" stroke-width="1.2"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#f59e0b" stroke-width="1.2"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#22c55e" stroke-width="1.2"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#a855f7" stroke-width="1.2"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#ef4444" stroke-width="1.2"/>
+    </marker>
+    <marker id="arrow-dim" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#4b5563" stroke-width="1.2"/>
+    </marker>
+  </defs>
+
+  <!-- ===== CLAUDE CODE (top) ===== -->
+  <g class="node" data-groups="overview indexing validation diagrams pdf" data-id="claude">
+    <rect x="370" y="20" width="360" height="56" rx="10" fill="#1e2433" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="550" y="42" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Claude Code</text>
+    <text x="550" y="60" text-anchor="middle" fill="#6b7280" font-size="11">Orchestrator — connects via .mcp.json</text>
+  </g>
+
+  <!-- MCP connections down -->
+  <g class="edge" data-groups="overview validation indexing" data-id="mcp-left">
+    <line x1="460" y1="76" x2="280" y2="148" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#arrow-blue)"/>
+    <text x="355" y="108" text-anchor="middle" fill="#3b82f6" font-size="10">stdio</text>
+  </g>
+  <g class="edge" data-groups="overview diagrams pdf" data-id="mcp-right">
+    <line x1="640" y1="76" x2="820" y2="148" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#arrow-blue)"/>
+    <text x="745" y="108" text-anchor="middle" fill="#3b82f6" font-size="10">stdio</text>
+  </g>
+
+  <!-- ===== COACHING-SKILLS SERVER ===== -->
+  <g class="node" data-groups="overview indexing validation" data-id="coaching-server">
+    <rect x="60" y="148" width="440" height="68" rx="10" fill="#1e2433" stroke="#2e3345" stroke-width="1.2"/>
+    <text x="280" y="172" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">coaching-skills</text>
+    <text x="280" y="188" text-anchor="middle" fill="#6b7280" font-size="10">Node.js / TypeScript — mcp-server/</text>
+    <text x="280" y="204" text-anchor="middle" fill="#4b5563" font-size="10">Dynamic skill discovery from skills/*.json</text>
+  </g>
+
+  <!-- ===== SOCCER-DIAGRAMS SERVER ===== -->
+  <g class="node" data-groups="overview diagrams pdf" data-id="diagram-server">
+    <rect x="600" y="148" width="440" height="68" rx="10" fill="#1e2433" stroke="#2e3345" stroke-width="1.2"/>
+    <text x="820" y="172" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">soccer-diagrams</text>
+    <text x="820" y="188" text-anchor="middle" fill="#6b7280" font-size="10">Python — diagram-server/</text>
+    <text x="820" y="204" text-anchor="middle" fill="#4b5563" font-size="10">Tactical rendering, spatial metrics, PDF output</text>
+  </g>
+
+  <!-- ===== TOOLS ROW (coaching) ===== -->
+  <g class="node" data-groups="overview validation" data-id="tool-search">
+    <rect x="60" y="248" width="136" height="44" rx="7" fill="#172220" stroke="#22c55e" stroke-width="1"/>
+    <text x="128" y="268" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="500">search_&lt;prefix&gt;</text>
+    <text x="128" y="282" text-anchor="middle" fill="#4b5563" font-size="9">semantic search</text>
+  </g>
+  <g class="node" data-groups="overview validation" data-id="tool-list">
+    <rect x="210" y="248" width="136" height="44" rx="7" fill="#172220" stroke="#22c55e" stroke-width="1"/>
+    <text x="278" y="268" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="500">list_&lt;prefix&gt;_principles</text>
+    <text x="278" y="282" text-anchor="middle" fill="#4b5563" font-size="9">principle checks</text>
+  </g>
+  <g class="node" data-groups="overview validation" data-id="tool-validate">
+    <rect x="360" y="248" width="140" height="44" rx="7" fill="#172220" stroke="#22c55e" stroke-width="1"/>
+    <text x="430" y="268" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="500">validate_&lt;prefix&gt;_session</text>
+    <text x="430" y="282" text-anchor="middle" fill="#4b5563" font-size="9">pass / warning / fail</text>
+  </g>
+
+  <!-- TOOLS ROW (diagrams) -->
+  <g class="node" data-groups="overview diagrams" data-id="tool-render">
+    <rect x="600" y="248" width="136" height="44" rx="7" fill="#1f1729" stroke="#a855f7" stroke-width="1"/>
+    <text x="668" y="268" text-anchor="middle" fill="#a855f7" font-size="11" font-weight="500">render_tactical_diagram</text>
+    <text x="668" y="282" text-anchor="middle" fill="#4b5563" font-size="9">mplsoccer → PNG/PDF</text>
+  </g>
+  <g class="node" data-groups="overview diagrams" data-id="tool-evaluate">
+    <rect x="750" y="248" width="136" height="44" rx="7" fill="#1f1729" stroke="#a855f7" stroke-width="1"/>
+    <text x="818" y="268" text-anchor="middle" fill="#a855f7" font-size="11" font-weight="500">evaluate_session_plan</text>
+    <text x="818" y="282" text-anchor="middle" fill="#4b5563" font-size="9">spatial metrics</text>
+  </g>
+  <g class="node" data-groups="overview pdf" data-id="tool-pdf">
+    <rect x="900" y="248" width="136" height="44" rx="7" fill="#1f1720" stroke="#ef4444" stroke-width="1"/>
+    <text x="968" y="268" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="500">compile_to_pdf</text>
+    <text x="968" y="282" text-anchor="middle" fill="#4b5563" font-size="9">reportlab → PDF</text>
+  </g>
+
+  <!-- Edges: servers → tools -->
+  <g class="edge" data-groups="overview validation">
+    <line x1="160" y1="216" x2="128" y2="248" stroke="#2e3345" stroke-width="1"/>
+    <line x1="280" y1="216" x2="278" y2="248" stroke="#2e3345" stroke-width="1"/>
+    <line x1="380" y1="216" x2="430" y2="248" stroke="#2e3345" stroke-width="1"/>
+  </g>
+  <g class="edge" data-groups="overview diagrams pdf">
+    <line x1="720" y1="216" x2="668" y2="248" stroke="#2e3345" stroke-width="1"/>
+    <line x1="820" y1="216" x2="818" y2="248" stroke="#2e3345" stroke-width="1"/>
+    <line x1="920" y1="216" x2="968" y2="248" stroke="#2e3345" stroke-width="1"/>
+  </g>
+
+  <!-- ===== INTERNAL COMPONENTS ===== -->
+
+  <!-- Embeddings engine -->
+  <g class="node" data-groups="overview indexing validation" data-id="embeddings">
+    <rect x="80" y="330" width="180" height="48" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="170" y="351" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">embeddings.ts</text>
+    <text x="170" y="366" text-anchor="middle" fill="#4b5563" font-size="9">all-MiniLM-L6-v2 (384-dim)</text>
+  </g>
+
+  <!-- Vector store -->
+  <g class="node" data-groups="overview indexing validation" data-id="vectorstore">
+    <rect x="280" y="330" width="180" height="48" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="370" y="351" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">vectorStore.ts</text>
+    <text x="370" y="366" text-anchor="middle" fill="#4b5563" font-size="9">cosine similarity search</text>
+  </g>
+
+  <!-- Validator -->
+  <g class="node" data-groups="overview validation" data-id="validator">
+    <rect x="180" y="410" width="180" height="48" rx="7" fill="#1a1d27" stroke="#22c55e" stroke-width="1" stroke-dasharray="4 2"/>
+    <text x="270" y="431" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">validator.ts</text>
+    <text x="270" y="446" text-anchor="middle" fill="#4b5563" font-size="9">checks × principles → evidence</text>
+  </g>
+
+  <!-- Renderer -->
+  <g class="node" data-groups="overview diagrams" data-id="renderer">
+    <rect x="620" y="330" width="170" height="48" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="705" y="351" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">renderer.py</text>
+    <text x="705" y="366" text-anchor="middle" fill="#4b5563" font-size="9">mplsoccer pitch drawing</text>
+  </g>
+
+  <!-- PDF builder -->
+  <g class="node" data-groups="overview pdf" data-id="pdfbuilder">
+    <rect x="810" y="330" width="170" height="48" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="895" y="351" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">pdf_builder.py</text>
+    <text x="895" y="366" text-anchor="middle" fill="#4b5563" font-size="9">reportlab styled documents</text>
+  </g>
+
+  <!-- Evaluator -->
+  <g class="node" data-groups="overview diagrams" data-id="evaluator">
+    <rect x="715" y="410" width="170" height="48" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="800" y="431" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">evaluator.py</text>
+    <text x="800" y="446" text-anchor="middle" fill="#4b5563" font-size="9">area-per-player thresholds</text>
+  </g>
+
+  <!-- Internal edges -->
+  <g class="edge" data-groups="overview validation">
+    <line x1="170" y1="292" x2="170" y2="330" stroke="#2e3345" stroke-width="1"/>
+    <line x1="370" y1="292" x2="370" y2="330" stroke="#2e3345" stroke-width="1"/>
+    <line x1="270" y1="378" x2="270" y2="410" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 2"/>
+  </g>
+  <g class="edge" data-groups="overview indexing">
+    <line x1="170" y1="378" x2="170" y2="505" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2"/>
+  </g>
+  <g class="edge" data-groups="overview diagrams">
+    <line x1="668" y1="292" x2="705" y2="330" stroke="#2e3345" stroke-width="1"/>
+    <line x1="818" y1="292" x2="800" y2="410" stroke="#2e3345" stroke-width="1"/>
+  </g>
+  <g class="edge" data-groups="overview pdf">
+    <line x1="968" y1="292" x2="895" y2="330" stroke="#2e3345" stroke-width="1"/>
+  </g>
+
+  <!-- ===== DATA STORES (bottom) ===== -->
+
+  <!-- Skills definitions -->
+  <g class="node" data-groups="overview indexing validation" data-id="skills">
+    <rect x="60" y="505" width="150" height="50" rx="7" fill="#1c1a12" stroke="#f59e0b" stroke-width="1"/>
+    <text x="135" y="527" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="500">skills/*.json</text>
+    <text x="135" y="543" text-anchor="middle" fill="#4b5563" font-size="9">principles, checks, toolPrefix</text>
+  </g>
+
+  <!-- Vector index -->
+  <g class="node" data-groups="overview indexing validation" data-id="vecindex">
+    <rect x="230" y="505" width="150" height="50" rx="7" fill="#1c1a12" stroke="#f59e0b" stroke-width="1"/>
+    <text x="305" y="527" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="500">data/&lt;skill&gt;/</text>
+    <text x="305" y="543" text-anchor="middle" fill="#4b5563" font-size="9">vector index (384-dim chunks)</text>
+  </g>
+
+  <!-- Resources -->
+  <g class="node" data-groups="overview indexing" data-id="resources">
+    <rect x="60" y="590" width="150" height="50" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="135" y="612" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">resources/&lt;skill&gt;/</text>
+    <text x="135" y="628" text-anchor="middle" fill="#4b5563" font-size="9">PDFs, SRT, VTT, JSON</text>
+  </g>
+
+  <!-- Samples -->
+  <g class="node" data-groups="overview validation" data-id="samples">
+    <rect x="400" y="505" width="150" height="50" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="475" y="527" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">samples/</text>
+    <text x="475" y="543" text-anchor="middle" fill="#4b5563" font-size="9">session plans, transcripts</text>
+  </g>
+
+  <!-- Output -->
+  <g class="node" data-groups="overview diagrams pdf" data-id="output">
+    <rect x="810" y="505" width="170" height="50" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="895" y="527" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">output/</text>
+    <text x="895" y="543" text-anchor="middle" fill="#4b5563" font-size="9">diagrams/ and pdfs/</text>
+  </g>
+
+  <!-- Data flow edges: resources → index -->
+  <g class="edge" data-groups="overview indexing" data-id="index-flow">
+    <path d="M135,590 L135,570 Q135,560 145,560 L220,560 Q230,560 230,550 L230,555"
+          fill="none" stroke="#f59e0b" stroke-width="1.2" marker-end="url(#arrow-orange)"/>
+    <text x="183" y="574" text-anchor="middle" fill="#f59e0b" font-size="9">build-index</text>
+  </g>
+
+  <!-- Validator → vector index -->
+  <g class="edge" data-groups="overview validation">
+    <line x1="305" y1="505" x2="340" y2="458" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 2"/>
+  </g>
+  <!-- Validator → skills -->
+  <g class="edge" data-groups="overview validation">
+    <line x1="135" y1="505" x2="220" y2="458" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 2"/>
+  </g>
+
+  <!-- Samples → Claude -->
+  <g class="edge" data-groups="overview validation" data-id="sample-flow">
+    <path d="M475,505 L475,490 Q475,480 485,480 L540,480 Q550,480 550,470 L550,76"
+          fill="none" stroke="#4b5563" stroke-width="1" stroke-dasharray="3 2"/>
+  </g>
+
+  <!-- Diagram output edges -->
+  <g class="edge" data-groups="overview diagrams">
+    <line x1="705" y1="378" x2="860" y2="505" stroke="#a855f7" stroke-width="1" stroke-dasharray="3 2"/>
+  </g>
+  <g class="edge" data-groups="overview pdf">
+    <line x1="895" y1="378" x2="895" y2="505" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2"/>
+  </g>
+
+  <!-- ===== FLOW OVERLAYS (hidden by default) ===== -->
+
+  <!-- Indexing flow arrows -->
+  <g class="edge flow-overlay" data-groups="indexing" style="display:none" data-id="flow-indexing">
+    <path d="M135,640 L135,650 Q135,660 155,660 L250,660 Q270,660 270,650 L270,560 L270,378 L170,378 L170,340"
+          fill="none" stroke="#f59e0b" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-orange)"/>
+    <text x="310" y="658" fill="#f59e0b" font-size="10" font-weight="600">1 chunk</text>
+    <text x="230" y="400" fill="#f59e0b" font-size="10" font-weight="600">2 embed</text>
+    <text x="310" y="490" fill="#f59e0b" font-size="10" font-weight="600">3 store</text>
+  </g>
+
+  <!-- Validation flow arrows -->
+  <g class="edge flow-overlay" data-groups="validation" style="display:none" data-id="flow-validation">
+    <path d="M550,76 L430,248"
+          fill="none" stroke="#22c55e" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-green)"/>
+    <path d="M430,292 L270,410"
+          fill="none" stroke="#22c55e" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-green)"/>
+    <path d="M230,434 L170,434 Q155,434 155,450 L155,460 Q155,470 170,475 L300,500"
+          fill="none" stroke="#22c55e" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-green)"/>
+    <text x="500" y="166" fill="#22c55e" font-size="10" font-weight="600">1 session plan</text>
+    <text x="370" y="362" fill="#22c55e" font-size="10" font-weight="600">2 check principles</text>
+    <text x="110" y="475" fill="#22c55e" font-size="10" font-weight="600">3 search evidence</text>
+  </g>
+
+  <!-- Diagram flow arrows -->
+  <g class="edge flow-overlay" data-groups="diagrams" style="display:none" data-id="flow-diagrams">
+    <path d="M550,76 L668,248"
+          fill="none" stroke="#a855f7" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-purple)"/>
+    <path d="M668,292 L705,330"
+          fill="none" stroke="#a855f7" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-purple)"/>
+    <path d="M705,378 L860,505"
+          fill="none" stroke="#a855f7" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-purple)"/>
+    <text x="630" y="166" fill="#a855f7" font-size="10" font-weight="600">1 DrillDefinition</text>
+    <text x="720" y="318" fill="#a855f7" font-size="10" font-weight="600">2 render</text>
+    <text x="810" y="455" fill="#a855f7" font-size="10" font-weight="600">3 save PNG/PDF</text>
+  </g>
+
+  <!-- PDF flow arrows -->
+  <g class="edge flow-overlay" data-groups="pdf" style="display:none" data-id="flow-pdf">
+    <path d="M550,76 L968,248"
+          fill="none" stroke="#ef4444" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-red)"/>
+    <path d="M968,292 L895,330"
+          fill="none" stroke="#ef4444" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-red)"/>
+    <path d="M895,378 L895,505"
+          fill="none" stroke="#ef4444" stroke-width="2" class="flow-arrow" marker-end="url(#arrow-red)"/>
+    <text x="790" y="166" fill="#ef4444" font-size="10" font-weight="600">1 title + sections[]</text>
+    <text x="945" y="318" fill="#ef4444" font-size="10" font-weight="600">2 build</text>
+    <text x="920" y="455" fill="#ef4444" font-size="10" font-weight="600">3 write PDF</text>
+  </g>
+
+</svg>
+</main>
+
+<div class="info-bar" id="info-bar">
+  <div class="label">Flow</div>
+  <div class="detail" id="info-detail">
+    Click a flow above to trace data through the system. Hover over any component for details.
+  </div>
+</div>
+
+<script>
+const flowDescriptions = {
+  overview: 'Two MCP servers run simultaneously. <code>coaching-skills</code> (Node.js) handles semantic search and validation against coaching frameworks. <code>soccer-diagrams</code> (Python) renders tactical diagrams, evaluates spatial metrics, and compiles PDF reports. Claude Code connects to both via <code>.mcp.json</code> and orchestrates all tools.',
+  indexing: '<span class="step-indicator">1</span> Source materials (PDFs, SRT/VTT/JSON transcripts) are chunked into 500-word segments with 50-word overlap. <span class="step-indicator">2</span> Each chunk is embedded with <code>all-MiniLM-L6-v2</code> (384-dim vectors). <span class="step-indicator">3</span> Vectors are stored in <code>data/&lt;skill&gt;/index.json</code>. Run via <code>npm run build-index -- --skill &lt;name&gt;</code>.',
+  validation: '<span class="step-indicator">1</span> User provides a session plan (text or transcript) to <code>validate_&lt;prefix&gt;_session</code>. <span class="step-indicator">2</span> The validator iterates each principle\'s checks, searching the session text for keyword matches. <span class="step-indicator">3</span> For each check, cosine similarity search retrieves supporting passages from the vector index. Returns <code>pass</code> / <code>warning</code> / <code>fail</code> per principle with evidence.',
+  diagrams: '<span class="step-indicator">1</span> A <code>DrillDefinition</code> (players, actions, zones) is sent to <code>render_tactical_diagram</code>. <span class="step-indicator">2</span> <code>renderer.py</code> draws the pitch, players, arrows, and zones using mplsoccer. <span class="step-indicator">3</span> Output saved to <code>output/diagrams/</code> as PNG or PDF.',
+  pdf: '<span class="step-indicator">1</span> Title and an array of sections (markdown text or image paths) are sent to <code>compile_to_pdf</code>. <span class="step-indicator">2</span> <code>pdf_builder.py</code> converts markdown to styled reportlab paragraphs, embeds images. <span class="step-indicator">3</span> Styled PDF written to <code>output/pdfs/</code>.',
+};
+
+const nodeDescriptions = {
+  claude: 'Claude Code connects to both MCP servers via <code>.mcp.json</code> (stdio transport). It discovers all available tools at startup and orchestrates searches, validations, rendering, and PDF compilation.',
+  'coaching-server': '<code>mcp-server/src/index.ts</code> — At startup, scans <code>skills/*.json</code>, loads each skill\'s vector index from <code>data/</code>, and dynamically registers 3 MCP tools per skill (<code>search_</code>, <code>list_</code>, <code>validate_</code>).',
+  'diagram-server': '<code>diagram-server/src/soccer_diagrams/server.py</code> — Python MCP server exposing 3 tools: <code>render_tactical_diagram</code>, <code>evaluate_session_plan</code>, <code>compile_to_pdf</code>. Uses mplsoccer and reportlab.',
+  'tool-search': '<code>search_&lt;prefix&gt;(query, top_k)</code> — Embeds the query, runs cosine similarity against the skill\'s vector index, returns top-k passages with chapter, page, and relevance score.',
+  'tool-list': '<code>list_&lt;prefix&gt;_principles()</code> — Returns the skill\'s principles array: name, description, and 3 yes/no validation checks per principle.',
+  'tool-validate': '<code>validate_&lt;prefix&gt;_session(session_plan)</code> — Checks the session plan text against each principle\'s checks, retrieves supporting evidence from the vector index, returns pass/warning/fail per principle.',
+  'tool-render': '<code>render_tactical_diagram(drill, format)</code> — Takes a DrillDefinition (meta, elements, actions, zones) and renders a soccer pitch diagram. Output: PNG or PDF.',
+  'tool-evaluate': '<code>evaluate_session_plan(pitch, players, activities)</code> — Calculates area-per-player for each activity. Thresholds: &lt;20m² very tight, 20-50 possession, 50-100 game-like, 100-200 transitions, &gt;200 fitness.',
+  'tool-pdf': '<code>compile_to_pdf(title, sections, output_path)</code> — Accepts markdown text and image paths. Converts to styled PDF with reportlab (A4, custom paragraph styles, embedded images).',
+  embeddings: '<code>embeddings.ts</code> — Loads <code>all-MiniLM-L6-v2</code> (~90MB, auto-downloads on first run). Produces 384-dimensional vectors for text chunks and queries.',
+  vectorstore: '<code>vectorStore.ts</code> — Stores and queries vectors using cosine similarity. Index stored as JSON with chunk text, metadata (chapter, page), and float32 vectors.',
+  validator: '<code>validator.ts</code> — For each principle, iterates its checks. Searches session plan text for keyword evidence, then queries the vector index for supporting passages. Aggregates into pass/warning/fail.',
+  renderer: '<code>renderer.py</code> — Uses mplsoccer to draw half/full pitch. Places player markers, movement arrows (pass, run, dribble, shot, curved_run), and shaded zones.',
+  pdfbuilder: '<code>pdf_builder.py</code> — Simple markdown-to-reportlab conversion. Handles headings, bullets, bold text. Embeds images scaled to page width. Outputs styled A4 PDFs.',
+  evaluator: '<code>evaluator.py</code> — Calculates area-per-player ratios, classifies activities by spatial category, builds intensity profile, generates recommendations.',
+  skills: '<code>skills/*.json</code> — Each file defines: <code>name</code>, <code>author</code>, <code>toolPrefix</code>, <code>principles[]</code> (with 3 checks each). Gitignored (derived from copyrighted materials).',
+  vecindex: '<code>data/&lt;skill&gt;/index.json</code> — Vector index with 500-word chunks (50-word overlap), 384-dim embeddings, and metadata. Gitignored, reproducible via <code>npm run build-index</code>.',
+  resources: '<code>resources/&lt;skill&gt;/</code> — Source PDFs, SRT subtitles, VTT subtitles, or JSON transcript arrays. Gitignored (copyrighted source materials).',
+  samples: '<code>samples/</code> — Sample session plans and video transcripts used as input for validation and evaluation.',
+  output: '<code>output/diagrams/</code> and <code>output/pdfs/</code> — Generated tactical diagram images and compiled PDF evaluation reports.',
+};
+
+let activeFlow = 'overview';
+
+// Flow buttons
+document.querySelectorAll('.flow-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.flow-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFlow = btn.dataset.flow;
+    applyFlow();
+    document.getElementById('info-detail').innerHTML = flowDescriptions[activeFlow];
+  });
+});
+
+// Hover on nodes
+document.querySelectorAll('.node').forEach(node => {
+  node.style.cursor = 'pointer';
+  node.addEventListener('mouseenter', () => {
+    const id = node.dataset.id;
+    if (nodeDescriptions[id]) {
+      document.getElementById('info-detail').innerHTML = nodeDescriptions[id];
+    }
+  });
+  node.addEventListener('mouseleave', () => {
+    document.getElementById('info-detail').innerHTML = flowDescriptions[activeFlow];
+  });
+});
+
+function applyFlow() {
+  const flow = activeFlow;
+
+  // Show/hide flow overlays
+  document.querySelectorAll('.flow-overlay').forEach(el => {
+    const groups = el.dataset.groups.split(' ');
+    el.style.display = groups.includes(flow) ? '' : 'none';
+  });
+
+  // Dim/highlight nodes and edges
+  if (flow === 'overview') {
+    document.querySelectorAll('.node, .edge:not(.flow-overlay)').forEach(el => {
+      el.classList.remove('dimmed', 'highlighted');
+    });
+  } else {
+    document.querySelectorAll('.node, .edge:not(.flow-overlay)').forEach(el => {
+      const groups = (el.dataset.groups || '').split(' ');
+      if (groups.includes(flow)) {
+        el.classList.remove('dimmed');
+        el.classList.add('highlighted');
+      } else {
+        el.classList.remove('highlighted');
+        el.classList.add('dimmed');
+      }
+    });
+  }
+}
+
+// Init
+applyFlow();
+</script>
+</body>
+</html>
