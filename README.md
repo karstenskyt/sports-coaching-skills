@@ -251,4 +251,4 @@ Action types: `pass`, `run`, `dribble`, `shot`, `curved_run`.
 
 ## License
 
-Private repository.
+[MIT](LICENSE)
