@@ -38,6 +38,9 @@ samples/**
 # Root-level PDF blueprints
 *.pdf
 
+# Claude Code
+.claude/
+
 # OS / editor artifacts
 nul
 .DS_Store
