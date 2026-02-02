@@ -55,8 +55,10 @@ cd mcp-server && npm install && cd ..
 ```bash
 cd diagram-server
 python -m venv .venv
-.venv/Scripts/pip install -e .        # Windows
-# .venv/bin/pip install -e .          # macOS/Linux
+.venv/Scripts/python -m ensurepip     # Windows  (ensures pip is available)
+.venv/Scripts/python -m pip install -e .
+# .venv/bin/python -m ensurepip       # macOS/Linux
+# .venv/bin/python -m pip install -e .
 cd ..
 ```
 
