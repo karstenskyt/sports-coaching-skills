@@ -252,7 +252,7 @@
     <rect x="60" y="148" width="440" height="68" rx="10" fill="#1e2433" stroke="#2e3345" stroke-width="1.2"/>
     <text x="280" y="172" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">coaching-skills</text>
     <text x="280" y="188" text-anchor="middle" fill="#6b7280" font-size="10">Node.js / TypeScript — mcp-server/</text>
-    <text x="280" y="204" text-anchor="middle" fill="#4b5563" font-size="10">Dynamic skill discovery from skills/**/*.json</text>
+    <text x="280" y="204" text-anchor="middle" fill="#4b5563" font-size="10">Dynamic discovery: 3 tools per skill from skills/**/*.json</text>
   </g>
 
   <!-- ===== SOCCER-DIAGRAMS SERVER ===== -->
@@ -277,7 +277,7 @@
   <g class="node" data-groups="overview validation" data-id="tool-validate">
     <rect x="360" y="248" width="140" height="44" rx="7" fill="#172220" stroke="#22c55e" stroke-width="1"/>
     <text x="430" y="268" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="500">validate_&lt;prefix&gt;_session</text>
-    <text x="430" y="282" text-anchor="middle" fill="#4b5563" font-size="9">pass / warning / fail</text>
+    <text x="430" y="282" text-anchor="middle" fill="#4b5563" font-size="9">auto-detects transcripts</text>
   </g>
 
   <!-- META-TOOLS (skill building) - positioned below coaching tools -->
@@ -405,6 +405,13 @@
     <rect x="400" y="505" width="150" height="50" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
     <text x="475" y="527" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">samples/</text>
     <text x="475" y="543" text-anchor="middle" fill="#4b5563" font-size="9">session plans, transcripts</text>
+  </g>
+
+  <!-- Templates -->
+  <g class="node" data-groups="overview validation pdf" data-id="templates">
+    <rect x="570" y="505" width="150" height="50" rx="7" fill="#1a1d27" stroke="#2e3345" stroke-width="1"/>
+    <text x="645" y="527" text-anchor="middle" fill="#c9cdd8" font-size="11" font-weight="500">templates/</text>
+    <text x="645" y="543" text-anchor="middle" fill="#4b5563" font-size="9">evaluation, improvement plans</text>
   </g>
 
   <!-- Drafts folder (skill building) -->
@@ -536,18 +543,18 @@ const flowDescriptions = {
   overview: 'Two MCP servers run simultaneously. <code>coaching-skills</code> (Node.js) handles semantic search and validation against coaching frameworks. <code>soccer-diagrams</code> (Python) renders tactical diagrams, evaluates spatial metrics, and compiles PDF reports. Claude Code connects to both via <code>.mcp.json</code> and orchestrates all tools.',
   indexing: '<span class="step-indicator">1</span> Source materials (PDFs, SRT/VTT/JSON transcripts) are chunked into 500-word segments with 50-word overlap. <span class="step-indicator">2</span> Each chunk is embedded with <code>all-MiniLM-L6-v2</code> (384-dim vectors). <span class="step-indicator">3</span> Vectors are stored in <code>data/&lt;skill&gt;/index.json</code>. Run via <code>npm run build-index -- --skill &lt;name&gt;</code>.',
   skillbuilding: '<span class="step-indicator">1</span> Run <code>npm run analyze-resources</code> to generate a skill proposal from indexed materials. <span class="step-indicator">2</span> Use <code>meta_generate_draft</code> to create skill definitions with principles and checks. <span class="step-indicator">3</span> Use <code>meta_finalize_draft</code> to move approved drafts to <code>skills/</code>. Multiple skills can share a vector index via <code>sharedIndex</code>.',
-  validation: '<span class="step-indicator">1</span> User provides a session plan (text or transcript) to <code>validate_&lt;prefix&gt;_session</code>. <span class="step-indicator">2</span> Session text is split into chunks; each check question is embedded and compared via cosine similarity. <span class="step-indicator">3</span> Evidence excerpts are extracted for each check. Scores: ≥55% pass, 40-55% warning, &lt;40% fail. Returns confidence scores and evidence per principle.',
+  validation: '<span class="step-indicator">1</span> User provides a session plan or transcript to <code>validate_&lt;prefix&gt;_session</code>. The tool auto-detects JSON/SRT/VTT transcripts. <span class="step-indicator">2</span> For transcripts, derives session plan and routes principles to appropriate input (transcript for coaching language, plan for activity design). <span class="step-indicator">3</span> Each check is embedded and compared via cosine similarity. Scores: ≥55% pass, 40-55% warning, &lt;40% fail.',
   diagrams: '<span class="step-indicator">1</span> A <code>DrillDefinition</code> (players, actions, zones) is sent to <code>render_tactical_diagram</code>. <span class="step-indicator">2</span> <code>renderer.py</code> draws the pitch, players, arrows, and zones using mplsoccer. <span class="step-indicator">3</span> Output saved to <code>output/diagrams/</code> as PNG or PDF.',
   pdf: '<span class="step-indicator">1</span> Title and an array of sections (markdown text or image paths) are sent to <code>compile_to_pdf</code>. <span class="step-indicator">2</span> <code>pdf_builder.py</code> converts markdown to styled reportlab paragraphs, embeds images. <span class="step-indicator">3</span> Styled PDF written to <code>output/pdfs/</code>.',
 };
 
 const nodeDescriptions = {
   claude: 'Claude Code connects to both MCP servers via <code>.mcp.json</code> (stdio transport). It discovers all available tools at startup and orchestrates searches, validations, rendering, and PDF compilation.',
-  'coaching-server': '<code>mcp-server/src/index.ts</code> — At startup, scans <code>skills/**/*.json</code> (including subdirectories), loads each skill\'s vector index from <code>data/</code> (supports shared indices via <code>sharedIndex</code>), and dynamically registers 3 MCP tools per skill (<code>search_</code>, <code>list_</code>, <code>validate_</code>) plus 7 meta-tools for skill building.',
+  'coaching-server': '<code>mcp-server/src/index.ts</code> — At startup, scans <code>skills/**/*.json</code> (including subdirectories), loads each skill\'s vector index from <code>data/</code> (supports shared indices via <code>sharedIndex</code>), and dynamically registers 3 MCP tools per skill (<code>search_</code>, <code>list_</code>, <code>validate_session</code>) plus 7 meta-tools for skill building.',
   'diagram-server': '<code>diagram-server/src/soccer_diagrams/server.py</code> — Python MCP server exposing 3 tools: <code>render_tactical_diagram</code>, <code>evaluate_session_plan</code>, <code>compile_to_pdf</code>. Uses mplsoccer and reportlab.',
   'tool-search': '<code>search_&lt;prefix&gt;(query, top_k)</code> — Embeds the query, runs cosine similarity against the skill\'s vector index, returns top-k passages with chapter, page, and relevance score.',
   'tool-list': '<code>list_&lt;prefix&gt;_principles()</code> — Returns the skill\'s principles array: name, description, and 3 yes/no validation checks per principle.',
-  'tool-validate': '<code>validate_&lt;prefix&gt;_session(session_plan)</code> — Uses semantic similarity (embedding-based) to match each check against session text chunks. Returns confidence scores (0-1), evidence excerpts, and pass/warning/fail per principle.',
+  'tool-validate': '<code>validate_&lt;prefix&gt;_session(session_plan)</code> — Validates session plans or transcripts. Automatically detects JSON/SRT/VTT transcripts and uses dual evaluation: transcript text for coaching language principles, derived session plan for design principles. Returns confidence scores (0-1), evidence excerpts, and pass/warning/fail per principle.',
   'tool-render': '<code>render_tactical_diagram(drill, format)</code> — Takes a DrillDefinition (meta, elements, actions, zones) and renders a soccer pitch diagram. Output: PNG or PDF.',
   'tool-evaluate': '<code>evaluate_session_plan(pitch, players, activities)</code> — Calculates area-per-player for each activity. Thresholds: &lt;20m² very tight, 20-50 possession, 50-100 game-like, 100-200 transitions, &gt;200 fitness.',
   'tool-pdf': '<code>compile_to_pdf(title, sections, output_path)</code> — Accepts markdown text and image paths. Converts to styled PDF with reportlab (A4, custom paragraph styles, embedded images).',
@@ -562,6 +569,7 @@ const nodeDescriptions = {
   vecindex: '<code>data/&lt;index-name&gt;/index.json</code> — Vector index with 500-word chunks (50-word overlap), 384-dim embeddings, and metadata. Multiple skills can share one index via <code>sharedIndex</code>. Gitignored, reproducible via <code>npm run build-index</code>.',
   resources: '<code>resources/&lt;skill&gt;/</code> — Source PDFs, SRT subtitles, VTT subtitles, or JSON transcript arrays. Gitignored (copyrighted source materials).',
   samples: '<code>samples/</code> — Sample session plans and video transcripts used as input for validation and evaluation.',
+  templates: '<code>templates/</code> — Reusable output templates for evaluation comparisons and improvement plans. ASCII box-drawing tables for consistent formatting. Version-controlled (not gitignored).',
   output: '<code>output/diagrams/</code> and <code>output/pdfs/</code> — Generated tactical diagram images and compiled PDF evaluation reports.',
   drafts: '<code>drafts/</code> — Skill proposals (from <code>analyze-resources</code>) and draft skill definitions (from <code>meta_generate_draft</code>). Intermediate stage before finalization. Gitignored.',
   'analyze-script': '<code>scripts/analyze-resources.ts</code> — Generates skill proposals from indexed materials. Extracts document inventory, content samples, and detected themes. Run via <code>npm run analyze-resources -- --skill &lt;name&gt;</code>.',

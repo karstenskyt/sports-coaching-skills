@@ -131,13 +131,13 @@ function buildToolsForSkill(
   const validateName = `validate_${prefix}_session`;
   tools.push({
     name: validateName,
-    description: `Validates a soccer session plan against ${definition.author}'s ${definition.principles.length} core principles. Returns pass/warning/fail status for each principle with suggestions and relevant passages.`,
+    description: `Validates a session plan or transcript against ${definition.author}'s ${definition.principles.length} core principles. Automatically detects transcripts (JSON/SRT/VTT) and uses dual evaluation: transcript text for coaching language principles, derived session plan for design principles. Returns pass/warning/fail status for each principle with suggestions and relevant passages.`,
     inputSchema: {
       type: "object" as const,
       properties: {
         session_plan: {
           type: "string",
-          description: "The full text of the soccer session plan to validate",
+          description: "Session plan text OR transcript (JSON with segments, SRT, or VTT format)",
         },
       },
       required: ["session_plan"],

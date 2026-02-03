@@ -190,7 +190,7 @@ Restart Claude Code. Three new MCP tools will appear:
 |------|-------------|
 | `search_gkcoach(query, top_k)` | Semantic search over the skill's indexed materials |
 | `list_gkcoach_principles()` | Returns the skill's principles and validation checks |
-| `validate_gkcoach_session(session_plan)` | Validates a session plan against all principles |
+| `validate_gkcoach_session(session_plan)` | Validates a session plan or transcript (auto-detects format and uses dual approach) |
 
 ### Step 5 (optional): Add a Claude Code skill
 
@@ -310,7 +310,7 @@ Generated dynamically per skill. For a skill with `toolPrefix: "example"`:
 |------|------------|---------|
 | `search_example` | `query` (string), `top_k` (number, default 5) | Array of `{text, chapter, page, score}` |
 | `list_example_principles` | none | Array of `{name, description, checks}` |
-| `validate_example_session` | `session_plan` (string) | See Validation Result Schema below |
+| `validate_example_session` | `session_plan` (string) | See Validation Result Schema below (auto-detects transcripts) |
 
 **Validation Result Schema:**
 
@@ -342,6 +342,33 @@ Generated dynamically per skill. For a skill with `toolPrefix: "example"`:
 ```
 
 Validation uses **semantic similarity** (embedding-based) rather than keyword matching. Each check question is embedded and compared against session text chunks using cosine similarity. Thresholds: ≥55% pass, 40-55% warning, <40% fail.
+
+#### Automatic Transcript Support
+
+The `validate_*_session` tool automatically detects transcripts and uses a dual-approach evaluation:
+
+1. **Input Detection**: Automatically determines if input is a transcript or a session plan (plain text)
+
+   Supported transcript formats:
+   | Format | Detection |
+   |--------|-----------|
+   | JSON | `{segments: [{start, end, text}]}` or `[{start, end, text}]` |
+   | SRT | Starts with sequence number and `00:00:00,000 --> 00:00:00,000` timestamps |
+   | VTT | Starts with `WEBVTT` header |
+
+2. **Transcript Processing**: When given a transcript, the tool:
+   - Extracts the raw transcript text
+   - Derives a structured session plan preserving verbatim coaching language
+   - Identifies activity boundaries, coaching quotes, and key points
+
+3. **Principle Routing**: Each principle is evaluated against the most appropriate input based on keywords:
+   - **Transcript-focused principles** (feedback, questioning, coaching language) → evaluated against raw transcript
+   - **Plan-focused principles** (design, constraints, spatial layout) → evaluated against derived session plan
+   - **General principles** → evaluated against both for broader coverage
+
+4. **Results**: The `findings` field for each principle indicates which evaluation type was used (e.g., `"evaluated via: transcript"`). The `overall` message notes when dual evaluation was applied.
+
+This ensures coaching language principles are evaluated against actual coach speech, while session design principles are evaluated against the structured activity flow.
 
 ### Soccer Diagrams Server
 
