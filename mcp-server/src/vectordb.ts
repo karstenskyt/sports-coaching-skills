@@ -33,17 +33,24 @@ export class SkillIndex {
   private index: LocalIndex;
   private ready = false;
   public readonly skillName: string;
+  public readonly indexName: string;
 
-  constructor(skillName: string, indexPath?: string) {
+  /**
+   * @param skillName - The skill's name (used for error messages)
+   * @param sharedIndex - Optional: use a shared index instead of skill-specific one
+   * @param indexPath - Optional: explicit path to the index directory
+   */
+  constructor(skillName: string, sharedIndex?: string, indexPath?: string) {
     this.skillName = skillName;
+    this.indexName = sharedIndex || skillName;
     const resolvedPath =
-      indexPath || this.resolveIndexPath(skillName);
+      indexPath || this.resolveIndexPath(this.indexName);
     this.index = new LocalIndex(resolvedPath);
   }
 
-  private resolveIndexPath(skillName: string): string {
-    // Primary: data/<skill-name>/
-    const primary = path.resolve(__dirname, `../../data/${skillName}`);
+  private resolveIndexPath(indexName: string): string {
+    // Primary: data/<index-name>/
+    const primary = path.resolve(__dirname, `../../data/${indexName}`);
     if (fs.existsSync(path.join(primary, "index.json"))) {
       return primary;
     }

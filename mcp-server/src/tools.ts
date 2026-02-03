@@ -15,6 +15,8 @@ export interface SkillDefinition {
   toolPrefix: string;
   sourceDescription: string;
   principles: Principle[];
+  /** Optional: use a shared vector index instead of skill-specific one */
+  sharedIndex?: string;
 }
 
 export interface ValidationResult {

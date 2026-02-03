@@ -22,6 +22,10 @@ sports-coaching-skills/
 ├── diagram-server/      # Python MCP server (diagrams + PDFs)
 ├── scripts/             # Indexing and test scripts
 ├── skills/              # Skill definitions (*.json, gitignored)
+│   ├── <skill-name>.json
+│   └── <author>/        # Skills can be organized in subdirectories
+│       ├── <skill-topic-1>.json
+│       └── <skill-topic-2>.json
 ├── resources/           # Source PDFs and transcripts (gitignored)
 ├── data/                # Vector indices (gitignored)
 ├── samples/             # Sample session plans and transcripts
@@ -35,7 +39,7 @@ sports-coaching-skills/
 | `coaching-skills` | Node.js / TypeScript | Semantic search, principle listing, session validation |
 | `soccer-diagrams` | Python | Tactical diagrams, spatial evaluation, PDF compilation |
 
-The coaching-skills server dynamically discovers all skill definitions in `skills/` at startup and registers three tools per skill.
+The coaching-skills server dynamically discovers all skill definitions in `skills/` and its subdirectories at startup and registers three tools per skill. Multiple skills can share a single vector index via the `sharedIndex` property.
 
 ## Prerequisites
 
@@ -114,7 +118,7 @@ The embedding model (~90 MB) downloads automatically on first run.
 
 ### Step 3: Write the skill definition
 
-Create `skills/goalkeeping-coach.json`:
+Create `skills/goalkeeping-coach.json` (or organize in a subdirectory like `skills/goalkeeping/gk-positioning.json`):
 
 ```json
 {
@@ -143,16 +147,35 @@ Create `skills/goalkeeping-coach.json`:
 
 | Field | Description |
 |-------|-------------|
-| `name` | Kebab-case identifier, must match the `resources/` and `data/` folder name |
+| `name` | Kebab-case identifier, must match the `resources/` and `data/` folder name (unless using `sharedIndex`) |
 | `displayName` | Human-readable name shown in tool descriptions |
 | `author` | Author of the source materials |
 | `authorDescription` | Short bio for context |
 | `domain` | Topic area (e.g. `sport-psychology`, `coaching-pedagogy`) |
 | `toolPrefix` | Short prefix for generated MCP tool names |
 | `sourceDescription` | Describes what the semantic search covers |
-| `principles` | Array of 3-5 principles, each with `name`, `description`, and 3 `checks` |
+| `sharedIndex` | *(Optional)* Name of a shared vector index in `data/`. Allows multiple skills to use one index. |
+| `principles` | Array of 3-5 principles, each with `name`, `description`, and `checks` |
 
 Each check is a yes/no question used during validation. The validator searches the session plan text for keywords from each check and queries the vector index for supporting evidence.
+
+#### Shared Vector Indices
+
+Multiple skills can share a single vector index by specifying `sharedIndex`. This is useful when you want granular skill definitions (e.g., different coaching topics) that all draw from the same source materials:
+
+```json
+{
+  "name": "author-topic-a",
+  "sharedIndex": "author-name",
+  "toolPrefix": "topica",
+  ...
+}
+```
+
+With this configuration:
+- The skill uses `data/author-name/` for semantic search instead of `data/author-topic-a/`
+- Run `npm run build-index -- --skill author-name` once to build the shared index
+- Multiple skills in `skills/author-name/` can all reference `"sharedIndex": "author-name"`
 
 ### Step 4: Rebuild and restart
 
@@ -246,7 +269,7 @@ Action types: `pass`, `run`, `dribble`, `shot`, `curved_run`.
 
 ## Project Conventions
 
-- **Skill definitions** (`skills/*.json`) are gitignored because they contain descriptions derived from copyrighted source materials.
+- **Skill definitions** (`skills/**/*.json`) are gitignored because they contain descriptions derived from copyrighted source materials. Skills can be organized in subdirectories.
 - **Resources** (`resources/`), **samples** (`samples/`), and **output** (`output/`) folders are tracked as empty directories via `.gitkeep` files; their contents are gitignored.
 - **Vector indices** (`data/`) are gitignored and reproducible via `npm run build-index`.
 - The MCP server discovers skills dynamically at startup — no code changes needed to add or remove skills.

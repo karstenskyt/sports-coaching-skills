@@ -28,7 +28,7 @@ resources/**
 data/
 
 # Skill definitions (contain principle descriptions derived from source materials)
-skills/*.json
+skills/**/*.json
 
 # Sample files (session plans, transcripts) — keep folder, ignore contents
 samples/**

@@ -25,14 +25,31 @@ function loadSkills(): Map<string, { definition: SkillDefinition; index: SkillIn
     return skills;
   }
 
-  const files = fs.readdirSync(skillsDir).filter((f) => f.endsWith(".json"));
-  for (const file of files) {
+  // Collect all JSON files from skills/ and skills/*/ subdirectories
+  const jsonFiles: string[] = [];
+
+  const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith(".json")) {
+      jsonFiles.push(path.join(skillsDir, entry.name));
+    } else if (entry.isDirectory()) {
+      // Scan subdirectory for JSON files
+      const subDir = path.join(skillsDir, entry.name);
+      const subFiles = fs.readdirSync(subDir).filter((f) => f.endsWith(".json"));
+      for (const subFile of subFiles) {
+        jsonFiles.push(path.join(subDir, subFile));
+      }
+    }
+  }
+
+  for (const filePath of jsonFiles) {
     try {
-      const raw = fs.readFileSync(path.join(skillsDir, file), "utf-8");
+      const raw = fs.readFileSync(filePath, "utf-8");
       const definition: SkillDefinition = JSON.parse(raw);
 
-      // Check if vector index exists for this skill
-      const dataDir = path.resolve(__dirname, `../../data/${definition.name}`);
+      // Determine which index to use (shared or skill-specific)
+      const indexName = definition.sharedIndex || definition.name;
+      const dataDir = path.resolve(__dirname, `../../data/${indexName}`);
       const legacyDir = path.resolve(__dirname, "../../data/vectra-index");
       const hasIndex =
         fs.existsSync(path.join(dataDir, "index.json")) ||
@@ -40,16 +57,17 @@ function loadSkills(): Map<string, { definition: SkillDefinition; index: SkillIn
 
       if (!hasIndex) {
         console.error(
-          `Skipping skill '${definition.name}': no vector index found. Run 'npm run build-index -- --skill ${definition.name}'`
+          `Skipping skill '${definition.name}': no vector index found at '${indexName}'. Run 'npm run build-index -- --skill ${indexName}'`
         );
         continue;
       }
 
-      const index = new SkillIndex(definition.name);
+      const index = new SkillIndex(definition.name, definition.sharedIndex);
       skills.set(definition.name, { definition, index });
-      console.error(`Loaded skill: ${definition.displayName} (tools: ${definition.toolPrefix})`);
+      const sharedNote = definition.sharedIndex ? ` [shared: ${definition.sharedIndex}]` : "";
+      console.error(`Loaded skill: ${definition.displayName} (tools: ${definition.toolPrefix})${sharedNote}`);
     } catch (err) {
-      console.error(`Error loading skill from ${file}:`, err);
+      console.error(`Error loading skill from ${filePath}:`, err);
     }
   }
 
