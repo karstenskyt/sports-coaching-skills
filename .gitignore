@@ -30,6 +30,11 @@ data/
 # Skill definitions (contain principle descriptions derived from source materials)
 skills/**/*.json
 
+# Skill drafts and proposals (intermediate files during skill creation)
+drafts/**
+!drafts/
+!drafts/.gitkeep
+
 # Sample files (session plans, transcripts) — keep folder, ignore contents
 samples/**
 !samples/**/

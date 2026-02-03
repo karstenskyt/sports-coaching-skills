@@ -29,6 +29,83 @@ export interface SearchResult {
   score: number;
 }
 
+/**
+ * Split text into semantic chunks (sentences/paragraphs) for embedding comparison.
+ * Aims for chunks of roughly 100-300 characters for good semantic granularity.
+ */
+export function splitIntoChunks(text: string, maxChunkSize = 300): string[] {
+  // First split by paragraphs (double newline or single newline with content)
+  const paragraphs = text.split(/\n\s*\n|\n(?=[A-Z])/).filter((p) => p.trim().length > 0);
+
+  const chunks: string[] = [];
+
+  for (const para of paragraphs) {
+    if (para.length <= maxChunkSize) {
+      chunks.push(para.trim());
+    } else {
+      // Split long paragraphs by sentences
+      const sentences = para.match(/[^.!?]+[.!?]+/g) || [para];
+      let current = "";
+
+      for (const sentence of sentences) {
+        if (current.length + sentence.length <= maxChunkSize) {
+          current += sentence;
+        } else {
+          if (current.trim()) chunks.push(current.trim());
+          current = sentence;
+        }
+      }
+      if (current.trim()) chunks.push(current.trim());
+    }
+  }
+
+  return chunks.filter((c) => c.length > 20); // Filter out very short chunks
+}
+
+/**
+ * Compute cosine similarity between two vectors.
+ */
+export function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 0;
+
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
+  return magnitude === 0 ? 0 : dotProduct / magnitude;
+}
+
+/**
+ * Find the most semantically similar chunks to a query.
+ * Returns chunks with their similarity scores, sorted by relevance.
+ */
+export async function findSimilarChunks(
+  chunks: string[],
+  query: string,
+  topK = 3
+): Promise<Array<{ text: string; score: number }>> {
+  const queryEmbedding = await embedText(query);
+
+  // Embed all chunks (batch for efficiency)
+  const chunkResults: Array<{ text: string; score: number }> = [];
+
+  for (const chunk of chunks) {
+    const chunkEmbedding = await embedText(chunk);
+    const score = cosineSimilarity(queryEmbedding, chunkEmbedding);
+    chunkResults.push({ text: chunk, score });
+  }
+
+  // Sort by score descending and return top K
+  return chunkResults.sort((a, b) => b.score - a.score).slice(0, topK);
+}
+
 export class SkillIndex {
   private index: LocalIndex;
   private ready = false;

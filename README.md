@@ -157,7 +157,7 @@ Create `skills/goalkeeping-coach.json` (or organize in a subdirectory like `skil
 | `sharedIndex` | *(Optional)* Name of a shared vector index in `data/`. Allows multiple skills to use one index. |
 | `principles` | Array of 3-5 principles, each with `name`, `description`, and `checks` |
 
-Each check is a yes/no question used during validation. The validator searches the session plan text for keywords from each check and queries the vector index for supporting evidence.
+Each check is a yes/no question used during validation. The validator uses semantic similarity (embedding-based comparison) to find evidence for each check in the session text, returning confidence scores and matching excerpts.
 
 #### Shared Vector Indices
 
@@ -209,6 +209,62 @@ Update `.claude/settings.local.json` to allow the new MCP tool permissions:
 }
 ```
 
+## Assisted Skill Creation
+
+Creating skill definitions manually can be time-consuming. The platform includes tools to help analyze source materials and generate skill drafts.
+
+### Workflow
+
+```
+1. Prepare resources     → resources/<author-name>/
+2. Build vector index    → npm run build-index -- --skill <author-name>
+3. Analyze resources     → npm run analyze-resources -- --skill <author-name>
+4. Review proposal       → drafts/<author-name>.skill-proposal.json
+5. Generate drafts       → Use meta_generate_draft tool with Claude's help
+6. Review & finalize     → Use meta_finalize_draft tool
+```
+
+### Step 1: Analyze Resources
+
+After building the vector index, run:
+
+```bash
+npm run analyze-resources -- --skill author-name --samples 15
+```
+
+This generates `drafts/author-name.skill-proposal.json` containing:
+- **Document inventory**: Files, chunk counts, detected chapters
+- **Content samples**: Representative excerpts for understanding the material
+- **Detected themes**: Potential topic areas for sub-skills
+- **Instructions**: Guidance for creating skills from the proposal
+
+### Step 2: Create Skills with Claude
+
+Ask Claude to help create skills based on the proposal:
+
+> "Read the skill proposal at drafts/author-name.skill-proposal.json and suggest 3-4 focused sub-skills with principles and checks."
+
+Claude can use the meta-tools to:
+1. Read the proposal (`meta_read_proposal`)
+2. Generate draft skills (`meta_generate_draft`)
+3. Finalize approved drafts (`meta_finalize_draft`)
+
+### Step 3: Review and Finalize
+
+Drafts are saved to `drafts/` for review before becoming active skills. Use `meta_finalize_draft` to move approved drafts to `skills/`.
+
+### Meta-Tools Reference
+
+| Tool | Purpose |
+|------|---------|
+| `meta_list_resources` | List resource folders and their index status |
+| `meta_list_proposals` | List existing proposals and drafts |
+| `meta_read_proposal` | Read a skill proposal for analysis |
+| `meta_generate_draft` | Create a draft skill definition |
+| `meta_read_draft` | Read an existing draft for review |
+| `meta_finalize_draft` | Move a draft to the skills folder |
+| `meta_delete_draft` | Delete a draft |
+
 ## MCP Tools Reference
 
 ### Coaching Skills Server
@@ -219,9 +275,38 @@ Generated dynamically per skill. For a skill with `toolPrefix: "example"`:
 |------|------------|---------|
 | `search_example` | `query` (string), `top_k` (number, default 5) | Array of `{text, chapter, page, score}` |
 | `list_example_principles` | none | Array of `{name, description, checks}` |
-| `validate_example_session` | `session_plan` (string) | `{overall, principles: [{name, status, findings, suggestions, relevantPassages}]}` |
+| `validate_example_session` | `session_plan` (string) | See Validation Result Schema below |
 
-Validation statuses: `pass`, `warning`, `fail`.
+**Validation Result Schema:**
+
+```json
+{
+  "overall": "Summary message with confidence percentage",
+  "summary": {
+    "pass": 3,
+    "warning": 1,
+    "fail": 1,
+    "averageConfidence": 0.52
+  },
+  "principles": [{
+    "name": "Principle Name",
+    "description": "What the principle means",
+    "status": "pass | warning | fail",
+    "confidence": 0.65,
+    "findings": "2 pass, 1 warn, 0 fail (confidence: 65%)",
+    "checks": [{
+      "question": "The yes/no check question?",
+      "score": 0.72,
+      "status": "pass",
+      "evidence": ["Matching excerpt from session...", "Another relevant excerpt..."]
+    }],
+    "suggestions": ["Strengthen: Check that scored as warning", "Missing: Check that failed"],
+    "relevantPassages": [{"text": "...", "chapter": "...", "page": 42, "score": 0.8}]
+  }]
+}
+```
+
+Validation uses **semantic similarity** (embedding-based) rather than keyword matching. Each check question is embedded and compared against session text chunks using cosine similarity. Thresholds: ≥55% pass, 40-55% warning, <40% fail.
 
 ### Soccer Diagrams Server
 
@@ -264,12 +349,13 @@ Action types: `pass`, `run`, `dribble`, `shot`, `curved_run`.
 |---------|-------------|
 | `npm run build` | Compile the MCP server TypeScript |
 | `npm run build-index -- --skill <name>` | Ingest resources and build vector index for a skill |
+| `npm run analyze-resources -- --skill <name>` | Generate a skill proposal from indexed resources |
 | `npm run start-server` | Start the coaching-skills MCP server manually |
-| `node scripts/test-validate.js <name>` | Run a quick validation test against a skill |
 
 ## Project Conventions
 
 - **Skill definitions** (`skills/**/*.json`) are gitignored because they contain descriptions derived from copyrighted source materials. Skills can be organized in subdirectories.
+- **Drafts** (`drafts/`) contains skill proposals and draft definitions during the assisted creation workflow. Contents are gitignored.
 - **Resources** (`resources/`), **samples** (`samples/`), and **output** (`output/`) folders are tracked as empty directories via `.gitkeep` files; their contents are gitignored.
 - **Vector indices** (`data/`) are gitignored and reproducible via `npm run build-index`.
 - The MCP server discovers skills dynamically at startup — no code changes needed to add or remove skills.

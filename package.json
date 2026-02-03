@@ -5,6 +5,7 @@
   "scripts": {
     "build": "cd mcp-server && npx tsc",
     "build-index": "node --max-old-space-size=4096 -r ts-node/register scripts/build-index.ts",
+    "analyze-resources": "node -r ts-node/register scripts/analyze-resources.ts",
     "start-server": "node mcp-server/dist/index.js"
   },
   "dependencies": {

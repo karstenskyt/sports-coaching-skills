@@ -13,6 +13,7 @@ import {
   searchSkill,
   validateSession,
 } from "./tools";
+import { getMetaTools } from "./meta-tools";
 
 // --- Discover skills ---
 
@@ -154,9 +155,15 @@ function buildToolsForSkill(
 const skills = loadSkills();
 const allTools: ToolEntry[] = [];
 
+// Add skill-specific tools (search, list, validate per skill)
 for (const [, { definition, index }] of skills) {
   allTools.push(...buildToolsForSkill(definition, index));
 }
+
+// Add meta-tools for skill building (always available)
+const metaTools = getMetaTools();
+allTools.push(...metaTools);
+console.error(`Loaded ${metaTools.length} meta-tools for skill building`);
 
 const server = new Server(
   { name: "coaching-skills", version: "2.0.0" },
