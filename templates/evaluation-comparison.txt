@@ -1,0 +1,199 @@
+Session Evaluation Comparison Template
+
+A reusable format for presenting side-by-side validation results from multiple
+skill frameworks, highlighting convergent gaps and strengths.
+
+================================================================================
+TEMPLATE STRUCTURE
+================================================================================
+
+Session Evaluation Comparison ([N] Frameworks)
+
+Session: [Session title/name]
+
+---
+
+Overall Assessment Summary
+┌─────────────────────┬──────┬─────────┬──────┬────────────────┬─────────────────────┐
+│ Framework           │ Pass │ Warning │ Fail │ Avg Confidence │ Status              │
+├─────────────────────┼──────┼─────────┼──────┼────────────────┼─────────────────────┤
+│ [Framework 1]       │ [#]  │ [#]     │ [#]  │ [##-##%]       │ [Status label]      │
+├─────────────────────┼──────┼─────────┼──────┼────────────────┼─────────────────────┤
+│ [Framework 2]       │ [#]  │ [#]     │ [#]  │ [##-##%]       │ [Status label]      │
+├─────────────────────┼──────┼─────────┼──────┼────────────────┼─────────────────────┤
+│ [Framework 3]       │ [#]  │ [#]     │ [#]  │ [##%]          │ [Status label]      │
+└─────────────────────┴──────┴─────────┴──────┴────────────────┴─────────────────────┘
+
+Status Labels: "Significant Gaps" | "Needs Attention" | "Minor Gaps" | "Strong"
+
+---
+
+Side-by-Side Principle Evaluation
+
+[Framework 1 Name] ([N] Skill Areas)
+┌─────────────────────────────────┬─────────┬────────────┬─────────────────────────────────────────────────┐
+│ Skill Area                      │ Status  │ Confidence │ Key Gap                                         │
+├─────────────────────────────────┼─────────┼────────────┼─────────────────────────────────────────────────┤
+│ [Skill area name]               │ [Status]│ [##%]      │ [Brief description of gap]                      │
+├─────────────────────────────────┼─────────┼────────────┼─────────────────────────────────────────────────┤
+│ [Skill area name]               │ [Status]│ [##%]      │ [Brief description of gap]                      │
+└─────────────────────────────────┴─────────┴────────────┴─────────────────────────────────────────────────┘
+
+[Framework 2 Name] ([N] Skill Areas)
+┌─────────────────────────────────────┬─────────┬────────────┬─────────────────────────────────────────────┐
+│ Skill Area                          │ Status  │ Confidence │ Key Gap                                     │
+├─────────────────────────────────────┼─────────┼────────────┼─────────────────────────────────────────────┤
+│ [Skill area name]                   │ [Status]│ [##%]      │ [Brief description of gap]                  │
+└─────────────────────────────────────┴─────────┴────────────┴─────────────────────────────────────────────┘
+
+[Repeat for each framework]
+
+---
+
+Principle-Level Detail Comparison
+
+[Group principles by theme across frameworks. Common themes include:]
+- PERCEPTION & INFORMATION PICKUP
+- DECISION FRAMEWORK & STRUCTURE
+- COACHING APPROACH & FEEDBACK
+- PRACTICE DESIGN & VARIABILITY
+- COGNITIVE LOAD & WORKING MEMORY
+- GAME TRANSFER & REPRESENTATIVENESS
+- MOTOR CONTROL & INHIBITION
+
+[THEME NAME IN CAPS]
+┌────────────┬──────────────────────────┬─────────┬───────────────────────────────────────────────────────┐
+│ Framework  │ Principle                │ Status  │ Evidence                                              │
+├────────────┼──────────────────────────┼─────────┼───────────────────────────────────────────────────────┤
+│ [Fmwk 1]   │ [Principle name]         │ [##%]   │ [Specific observation from session plan]              │
+├────────────┼──────────────────────────┼─────────┼───────────────────────────────────────────────────────┤
+│ [Fmwk 2]   │ [Principle name]         │ [Status]│ [Specific observation from session plan]              │
+├────────────┼──────────────────────────┼─────────┼───────────────────────────────────────────────────────┤
+│ [Fmwk 3]   │ [Principle name]         │ [##%]   │ [Specific observation from session plan]              │
+└────────────┴──────────────────────────┴─────────┴───────────────────────────────────────────────────────┘
+Convergent Gap: [Summary of what all frameworks agree is missing in this area]
+
+[OR for strengths:]
+Partial Strength: [Summary of what the session does well in this area]
+
+[Repeat for each thematic grouping]
+
+---
+
+Strength & Gap Matrix
+┌────────────────────────────────┬────────────┬─────────┬────────┬──────────────────┐
+│ Session Element                │ [Fmwk 1]   │ [Fmwk 2]│ [Fmwk 3]│ Overall          │
+├────────────────────────────────┼────────────┼─────────┼────────┼──────────────────┤
+│ [Element that's strong]        │ Pass       │ Warning │ Pass   │ STRENGTH         │
+├────────────────────────────────┼────────────┼─────────┼────────┼──────────────────┤
+│ [Element that's adequate]      │ Warning    │ Warning │ Warning│ Adequate         │
+├────────────────────────────────┼────────────┼─────────┼────────┼──────────────────┤
+│ [Element that's a gap]         │ Fail       │ Fail    │ Fail   │ GAP              │
+├────────────────────────────────┼────────────┼─────────┼────────┼──────────────────┤
+│ [Element not applicable]       │ Fail       │ Fail    │ N/A    │ GAP              │
+└────────────────────────────────┴────────────┴─────────┴────────┴──────────────────┘
+
+Overall Categories:
+  STRENGTH - Majority Pass
+  Adequate - Majority Warning, no Fail
+  GAP      - Any Fail
+
+---
+
+Unified Recommendations (Prioritized by Cross-Framework Convergence)
+┌──────────┬─────────────────────────────────────────────────────┬───────────────────┬────────┐
+│ Priority │ Improvement                                         │ Frameworks        │ Impact │
+├──────────┼─────────────────────────────────────────────────────┼───────────────────┼────────┤
+│ 1        │ [Highest priority improvement]                      │ All [N]           │ High   │
+├──────────┼─────────────────────────────────────────────────────┼───────────────────┼────────┤
+│ 2        │ [Second priority improvement]                       │ All [N]           │ High   │
+├──────────┼─────────────────────────────────────────────────────┼───────────────────┼────────┤
+│ 3        │ [Third priority improvement]                        │ [Fmwk 1] + [Fmwk 2]│ Medium │
+├──────────┼─────────────────────────────────────────────────────┼───────────────────┼────────┤
+│ ...      │ ...                                                 │ ...               │ ...    │
+└──────────┴─────────────────────────────────────────────────────┴───────────────────┴────────┘
+
+Impact Levels:
+  High    - Addresses gaps in all frameworks
+  Medium  - Addresses gaps in 2+ frameworks
+  Low-Med - Addresses gap in 1 framework but significant
+
+---
+
+Summary
+
+What the Session Does Well:
+- [Strength 1]
+- [Strength 2]
+- [Strength 3]
+
+What All [N] Frameworks Agree Is Missing:
+1. [Gap theme 1] - [Brief explanation]
+2. [Gap theme 2] - [Brief explanation]
+3. [Gap theme 3] - [Brief explanation]
+4. [Gap theme 4] - [Brief explanation]
+5. [Gap theme 5] - [Brief explanation]
+
+The Core Insight:
+
+[One sentence capturing the fundamental shift needed]
+
+[1-2 sentences explaining the convergent finding across frameworks]
+
+================================================================================
+FORMATTING CONVENTIONS
+================================================================================
+
+Character Set for Tables:
+  ┌ ─ ┬ ┐    Top corners and horizontal
+  │   │ │    Vertical separators
+  ├ ─ ┼ ┤    Row separators with intersections
+  └ ─ ┴ ┘    Bottom corners
+
+Status Values:
+  Pass       - Principle fully satisfied (or confidence > 60%)
+  Warning    - Principle partially satisfied (confidence 30-60%)
+  Fail       - Principle not satisfied (confidence < 30%)
+  N/A        - Principle not applicable to this session
+
+Confidence Display:
+  [##%]      - Single value when available
+  [##-##%]   - Range when multiple principles aggregated
+
+Dividers:
+  ---        Section separator (three dashes)
+
+Theme Headers:
+  ALL CAPS   - Theme names in principle-level detail section
+
+================================================================================
+USAGE GUIDELINES
+================================================================================
+
+When to Use This Template:
+- After running validation tools against a session plan
+- To compare findings across multiple theoretical frameworks
+- Before creating an improvement plan (this identifies what to improve)
+
+Document Flow:
+  1. Evaluation Comparison (this template) - Identifies gaps
+  2. Improvement Plan (improvement-plan.txt) - Addresses gaps
+
+Key Sections:
+1. Overall Assessment - Quick summary for busy readers
+2. Side-by-Side - Framework-specific detail
+3. Principle-Level Detail - Thematic grouping shows convergence
+4. Strength & Gap Matrix - Visual overview of session elements
+5. Unified Recommendations - Prioritized action items
+6. Summary - Key takeaways and core insight
+
+Thematic Groupings:
+- Group related principles from different frameworks together
+- Use consistent theme names across evaluations for comparison
+- Identify "Convergent Gap" when all frameworks flag same issue
+- Identify "Partial Strength" when most frameworks pass
+
+Prioritization Logic:
+- All frameworks agree = Priority 1-3 (High impact)
+- Most frameworks agree = Priority 4-6 (Medium impact)
+- Single framework flags = Priority 7+ (Low-Medium impact)

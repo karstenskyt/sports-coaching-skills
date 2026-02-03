@@ -1,0 +1,176 @@
+Session Improvement Plan Template
+
+A reusable format for combining validation results from multiple skill frameworks
+into a single actionable improvement plan.
+
+================================================================================
+TEMPLATE STRUCTURE
+================================================================================
+
+● Unified Improvement Plan [add "(N Frameworks)" if more than 2]
+
+  Session: [Session title/name]
+
+  [OPTIONAL: Include Framework Overview table if 3+ frameworks]
+  Framework Overview
+  ┌────────────────────┬───────────────────────────────┬───────────────────────────────────────────┐
+  │ Framework          │ Focus Area                    │ Key Lens                                  │
+  ├────────────────────┼───────────────────────────────┼───────────────────────────────────────────┤
+  │ [Framework 1]      │ [Focus area description]      │ [Key concepts, comma-separated]           │
+  ├────────────────────┼───────────────────────────────┼───────────────────────────────────────────┤
+  │ [Framework 2]      │ [Focus area description]      │ [Key concepts, comma-separated]           │
+  └────────────────────┴───────────────────────────────┴───────────────────────────────────────────┘
+
+  ---
+  Integrated Recommendations
+  ┌──────────┬─────────────────────────────────┬────────────────────────────┬────────────────────────────┐
+  │ Priority │           Improvement           │     [Framework 1] Source   │     [Framework 2] Source   │
+  ├──────────┼─────────────────────────────────┼────────────────────────────┼────────────────────────────┤
+  │ 1        │ [Primary improvement]           │ [Principle name]           │ [Principle name]           │
+  ├──────────┼─────────────────────────────────┼────────────────────────────┼────────────────────────────┤
+  │ 2        │ [Second improvement]            │ [Principle name]           │ [Principle name]           │
+  ├──────────┼─────────────────────────────────┼────────────────────────────┼────────────────────────────┤
+  │ ...      │ ...                             │ ...                        │ ...                        │
+  └──────────┴─────────────────────────────────┴────────────────────────────┴────────────────────────────┘
+
+  Note: Prioritize improvements that address gaps in multiple frameworks simultaneously.
+  Add columns for additional frameworks as needed.
+
+  ---
+  Improvement 1: [Improvement Title]
+
+  [Optional: Named technique in quotes, e.g., "READ-DECIDE-COMMIT"]
+
+  [Description paragraph explaining the improvement]
+
+  [Use bullet points for components:]
+  - [Component 1]: [Description]
+  - [Component 2]: [Description]
+  - [Component 3]: [Description]
+
+  [OR use a table for structured data:]
+  ┌──────────┬─────────────────────────────────────────────────────────────┬──────────────────────────┐
+  │ [Col 1]  │ [Col 2]                                                     │ [Col 3]                  │
+  ├──────────┼─────────────────────────────────────────────────────────────┼──────────────────────────┤
+  │ [Data]   │ [Data]                                                      │ [Data]                   │
+  └──────────┴─────────────────────────────────────────────────────────────┴──────────────────────────┘
+
+  Why: [Single sentence connecting to framework principles] (for 2 frameworks)
+
+  [OR for 3+ frameworks:]
+  Why (Three Frameworks):
+  - [Framework 1]: [Rationale]
+  - [Framework 2]: [Rationale]
+  - [Framework 3]: [Rationale]
+
+  ---
+  Improvement 2: [Improvement Title]
+
+  [Continue pattern - use tables for structured comparisons, bullets for lists]
+
+  Why: [Rationale]
+
+  ---
+  [Repeat for each improvement, typically 5-8 total]
+
+  ---
+  Revised Session Flow
+
+  ACTIVITY 1 ([duration]) [- Optional subtitle]
+  ├── [Step/element] ([sub-duration if needed])
+  ├── [Step/element]
+  ├── [Improvement element - Question/Reflection/etc.]
+  ├── [Step/element]
+  └── [Step/element]
+
+  ACTIVITY 2 ([duration]) [- Optional subtitle]
+  ├── [Step/element]
+  ├── [Improvement element]
+  └── [Step/element]
+
+  ACTIVITY N ([duration]) [- Optional subtitle]
+  ├── [Step/element]
+  └── [Step/element]
+
+  ---
+  Summary
+
+  [For 2 frameworks - use numbered list:]
+  This unified plan addresses gaps from both frameworks by:
+  1. [Theme 1] ([brief elaboration])
+  2. [Theme 2] ([brief elaboration])
+  3. [Theme 3] ([brief elaboration])
+  4. [Theme 4] ([brief elaboration])
+
+  [Final sentence about overall impact]
+
+  [OR for 3+ frameworks - use table:]
+  ┌────────────────────────────────┬───────────────────────────────────────────────────────────────────┐
+  │ Theme                          │ What It Addresses                                                 │
+  ├────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ [Theme 1]                      │ [Description] ([Framework sources])                              │
+  ├────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ [Theme 2]                      │ [Description] ([Framework sources])                              │
+  └────────────────────────────────┴───────────────────────────────────────────────────────────────────┘
+
+  Key Shift
+
+  [1-2 sentences describing the fundamental change from original to improved session]
+
+  [Optional: Closing quote or insight from one of the frameworks]
+
+================================================================================
+FORMATTING CONVENTIONS
+================================================================================
+
+Character Set for Tables:
+  ┌ ─ ┬ ┐    Top corners and horizontal
+  │   │ │    Vertical separators
+  ├ ─ ┼ ┤    Row separators with intersections
+  └ ─ ┴ ┘    Bottom corners
+
+Tree Structure for Session Flow:
+  ├──        Branch (not last item)
+  └──        Branch (last item)
+
+Dividers:
+  ---        Section separator (three dashes)
+
+Text Formatting:
+  ● Title    Bullet point for main title only
+  Two-space  Indent all content after title line
+
+Rationale Format:
+  Why:       For 2 frameworks (single line)
+  Why (N Frameworks):  For 3+ frameworks (bullet list)
+
+================================================================================
+USAGE GUIDELINES
+================================================================================
+
+When to Use This Template:
+- After validating a session plan against 2+ skill frameworks
+- When combining recommendations from different theoretical perspectives
+- To create actionable improvement plans for coaches
+
+Principles for Integration:
+1. Find convergence first - Identify improvements that satisfy multiple frameworks
+2. Prioritize by impact - Rank improvements by how many principles they address
+3. Keep it actionable - Each improvement should have specific, implementable steps
+4. Connect to theory - Always explain "Why" with reference to source principles
+5. Preserve session intent - Improvements should enhance, not replace, original design
+
+Adaptations for Different Framework Counts:
+- 2 frameworks: Standard format, single-line "Why:" rationale
+- 3+ frameworks: Add Framework Overview table, bullet-point "Why:" rationale
+- Single framework: Simplify to just improvements without cross-referencing
+
+Recommended Number of Improvements:
+- Minimum: 3 improvements (covers main gaps)
+- Typical: 5-8 improvements (comprehensive but digestible)
+- Maximum: 10 improvements (beyond this, consider phased plans)
+
+Table Column Alignment:
+- Ensure columns align vertically for readability
+- Use consistent spacing within columns
+- Pad shorter text to maintain alignment

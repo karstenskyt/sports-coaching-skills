@@ -274,19 +274,31 @@ Reusable templates for common outputs live in `templates/`. These provide consis
 
 | Template | Purpose |
 |----------|---------|
-| `improvement-plan.md` | Unified improvement plan combining recommendations from multiple skill frameworks |
+| `evaluation-comparison.txt` | Side-by-side comparison of validation results across multiple frameworks |
+| `improvement-plan.txt` | Unified improvement plan combining recommendations from multiple frameworks |
+
+### Evaluation Comparison Template
+
+After validating a session against multiple skill frameworks, use this template to present findings side-by-side and identify convergent gaps and strengths.
+
+**Key sections:**
+- **Overall Assessment Summary** — Pass/Warning/Fail counts and status per framework
+- **Side-by-Side Principle Evaluation** — Framework-specific skill area results
+- **Principle-Level Detail Comparison** — Thematic groupings showing convergence across frameworks
+- **Strength & Gap Matrix** — Visual overview of session elements across all frameworks
+- **Unified Recommendations** — Prioritized improvements based on cross-framework convergence
 
 ### Improvement Plan Template
 
-After validating a session against multiple skill frameworks, use this template to synthesize recommendations into a single actionable plan.
+After completing an evaluation comparison, use this template to synthesize recommendations into a single actionable plan.
 
 **Key sections:**
 - **Integrated Recommendations** — Priority table mapping improvements to source principles across frameworks
-- **Improvement Details** — Individual improvements with components, rationale, and framework connections
+- **Improvement Details** — Individual improvements with tables, rationale, and framework connections
 - **Revised Session Flow** — Tree-diagram visualization of the improved session
 - **Summary** — Thematic overview of changes and expected benefits
 
-**Usage:** Copy the template structure and fill in based on validation results. The template includes guidelines for adapting to different numbers of frameworks and recommended improvement counts.
+**Usage:** Both templates use ASCII box-drawing tables for consistent formatting. Copy the template structure and fill in based on validation results. Templates include guidelines for adapting to different numbers of frameworks.
 
 ## MCP Tools Reference
 
