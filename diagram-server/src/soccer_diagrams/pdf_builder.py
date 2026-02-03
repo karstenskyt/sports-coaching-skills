@@ -1,15 +1,23 @@
-"""Compile session plans into PDF documents using reportlab."""
+"""Compile session plans into PDF documents using reportlab.
+
+This renderer provides direct control over PDF layout using reportlab's
+platypus library. It supports markdown tables with proper page break handling
+(tables split across pages with repeated headers).
+
+Use renderer='reportlab' in compile_to_pdf to select this renderer.
+"""
 
 from __future__ import annotations
 
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import inch, mm
+from reportlab.lib.units import mm
 from reportlab.platypus import (
     Image,
     Paragraph,
@@ -52,17 +60,143 @@ def _get_styles():
         alignment=1,  # center
         spaceAfter=12,
     ))
+    styles.add(ParagraphStyle(
+        "TableCell",
+        parent=styles["BodyText"],
+        fontSize=9,
+        leading=12,
+    ))
+    styles.add(ParagraphStyle(
+        "TableHeader",
+        parent=styles["BodyText"],
+        fontSize=9,
+        leading=12,
+        fontName="Helvetica-Bold",
+        textColor=colors.HexColor("#1565C0"),
+    ))
     return styles
 
 
+def _parse_markdown_table(lines: list[str], styles) -> Table | None:
+    """Parse markdown table lines into a reportlab Table.
+
+    Args:
+        lines: List of markdown table lines (header, separator, data rows)
+        styles: Reportlab stylesheet with TableCell and TableHeader styles
+
+    Returns:
+        A reportlab Table object with repeatRows=1 for proper page breaks,
+        or None if the lines don't form a valid markdown table.
+    """
+    if len(lines) < 2:
+        return None
+
+    # Parse header row
+    header_line = lines[0].strip()
+    if not header_line.startswith("|"):
+        return None
+
+    # Check for separator line (|---|---|)
+    separator_line = lines[1].strip()
+    if not re.match(r'\|[\s\-:|]+\|', separator_line):
+        return None
+
+    def parse_row(line: str) -> list[str]:
+        """Parse a markdown table row into cells."""
+        # Strip leading/trailing pipes and split by pipe
+        return [cell.strip() for cell in line.strip("|").split("|")]
+
+    def format_cell(text: str, is_header: bool = False) -> Paragraph:
+        """Format cell text with basic markdown support."""
+        # Bold markers
+        text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text)
+        # Italic markers
+        text = re.sub(r'\*(.+?)\*', r'<i>\1</i>', text)
+        style = styles["TableHeader"] if is_header else styles["TableCell"]
+        return Paragraph(text, style)
+
+    # Build table data
+    header_cells = parse_row(header_line)
+    table_data = [[format_cell(cell, is_header=True) for cell in header_cells]]
+
+    # Parse data rows (skip separator)
+    for line in lines[2:]:
+        line = line.strip()
+        if not line or not line.startswith("|"):
+            break
+        row_cells = parse_row(line)
+        # Pad row if needed
+        while len(row_cells) < len(header_cells):
+            row_cells.append("")
+        table_data.append([format_cell(cell) for cell in row_cells[:len(header_cells)]])
+
+    # Calculate column widths based on page width
+    page_width = A4[0] - 40 * mm  # Account for margins
+    num_cols = len(header_cells)
+    col_width = page_width / num_cols
+
+    # Create table with repeat header rows for page breaks
+    table = Table(table_data, colWidths=[col_width] * num_cols, repeatRows=1)
+
+    # Style the table
+    table.setStyle(TableStyle([
+        # Header styling
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e3f2fd")),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#1565C0")),
+        # All cells
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#bdbdbd")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        # Alternating row colors
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fafafa")]),
+    ]))
+
+    return table
+
+
 def _markdown_to_paragraphs(text: str, styles) -> list:
-    """Simple markdown-to-reportlab conversion for basic formatting."""
+    """Simple markdown-to-reportlab conversion for basic formatting including tables."""
     elements = []
-    for line in text.split("\n"):
+    lines = text.split("\n")
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
         stripped = line.strip()
+
+        # Check if this line starts a table
+        if stripped.startswith("|") and i + 1 < len(lines):
+            # Collect all table lines
+            table_lines = [stripped]
+            j = i + 1
+            while j < len(lines) and lines[j].strip().startswith("|"):
+                table_lines.append(lines[j].strip())
+                j += 1
+
+            # Try to parse as table
+            table = _parse_markdown_table(table_lines, styles)
+            if table:
+                elements.append(Spacer(1, 6))
+                elements.append(table)
+                elements.append(Spacer(1, 6))
+                i = j
+                continue
+
+        # Handle horizontal rules
+        if stripped in ("---", "***", "___"):
+            elements.append(Spacer(1, 8))
+            i += 1
+            continue
+
         if not stripped:
             elements.append(Spacer(1, 6))
+            i += 1
             continue
+
         if stripped.startswith("### "):
             elements.append(Paragraph(stripped[4:], styles["SectionHead"]))
         elif stripped.startswith("## "):
@@ -74,12 +208,13 @@ def _markdown_to_paragraphs(text: str, styles) -> list:
             elements.append(Paragraph(bullet_text, styles["BodyText2"]))
         else:
             # Bold markers
-            processed = stripped.replace("**", "<b>", 1)
-            while "**" in processed:
-                processed = processed.replace("**", "</b>", 1)
-                if "**" in processed:
-                    processed = processed.replace("**", "<b>", 1)
+            processed = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', stripped)
+            # Italic markers
+            processed = re.sub(r'\*(.+?)\*', r'<i>\1</i>', processed)
             elements.append(Paragraph(processed, styles["BodyText2"]))
+
+        i += 1
+
     return elements
 
 

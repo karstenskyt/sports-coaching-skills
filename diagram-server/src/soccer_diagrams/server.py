@@ -12,6 +12,7 @@ from mcp.types import TextContent, Tool
 
 from .evaluator import evaluate_session
 from .pdf_builder import compile_pdf
+from .html_pdf_builder import compile_pdf_html, compile_html
 from .renderer import render
 from .schema import DrillDefinition
 
@@ -88,7 +89,9 @@ async def list_tools() -> list[Tool]:
             name="compile_to_pdf",
             description=(
                 "Compile a session plan with text and images into a PDF document. "
-                "Accepts markdown text sections and image paths. Returns the PDF file path."
+                "Accepts markdown text sections and image paths. Returns the PDF file path. "
+                "Use renderer='html' (default) for better table and formatting support, "
+                "or renderer='reportlab' for the legacy renderer."
             ),
             inputSchema={
                 "type": "object",
@@ -119,6 +122,53 @@ async def list_tools() -> list[Tool]:
                     "output_path": {
                         "type": "string",
                         "description": "Optional output file path. Defaults to output/pdfs/",
+                    },
+                    "renderer": {
+                        "type": "string",
+                        "enum": ["html", "reportlab"],
+                        "default": "html",
+                        "description": "PDF renderer: 'html' (better formatting/tables) or 'reportlab' (legacy)",
+                    },
+                },
+                "required": ["title", "sections"],
+            },
+        ),
+        Tool(
+            name="compile_to_html",
+            description=(
+                "Compile a session plan with text and images into a standalone HTML document. "
+                "Accepts markdown text sections and image paths. Images are embedded as base64. "
+                "Returns the HTML file path."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "HTML document title"},
+                    "sections": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["markdown", "image"],
+                                },
+                                "content": {
+                                    "type": "string",
+                                    "description": "Markdown text or image file path",
+                                },
+                                "caption": {
+                                    "type": "string",
+                                    "description": "Optional caption for images",
+                                },
+                            },
+                            "required": ["type", "content"],
+                        },
+                        "description": "Ordered list of content sections",
+                    },
+                    "output_path": {
+                        "type": "string",
+                        "description": "Optional output file path. Defaults to output/html/",
                     },
                 },
                 "required": ["title", "sections"],
@@ -154,21 +204,34 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     elif name == "compile_to_pdf":
         output_path = arguments.get("output_path")
-        if output_path is None:
-            # Use default dir
-            pdf_path = compile_pdf(
-                title=arguments["title"],
-                sections=arguments["sections"],
-            )
+        renderer = arguments.get("renderer", "html")
+
+        # Select the appropriate compiler based on renderer
+        if renderer == "html":
+            compiler = compile_pdf_html
         else:
-            pdf_path = compile_pdf(
-                title=arguments["title"],
-                sections=arguments["sections"],
-                output_path=output_path,
-            )
+            compiler = compile_pdf
+
+        pdf_path = compiler(
+            title=arguments["title"],
+            sections=arguments["sections"],
+            output_path=output_path,
+        )
         return [TextContent(
             type="text",
             text=json.dumps({"pdf_path": pdf_path}),
+        )]
+
+    elif name == "compile_to_html":
+        output_path = arguments.get("output_path")
+        html_path = compile_html(
+            title=arguments["title"],
+            sections=arguments["sections"],
+            output_path=output_path,
+        )
+        return [TextContent(
+            type="text",
+            text=json.dumps({"html_path": html_path}),
         )]
 
     else:
