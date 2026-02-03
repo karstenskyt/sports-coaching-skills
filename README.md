@@ -29,6 +29,7 @@ sports-coaching-skills/
 ├── resources/           # Source PDFs and transcripts (gitignored)
 ├── data/                # Vector indices (gitignored)
 ├── samples/             # Sample session plans and transcripts
+├── templates/           # Reusable output templates (improvement plans, reports)
 └── output/              # Generated diagrams and PDFs
 ```
 
@@ -265,6 +266,28 @@ Drafts are saved to `drafts/` for review before becoming active skills. Use `met
 | `meta_finalize_draft` | Move a draft to the skills folder |
 | `meta_delete_draft` | Delete a draft |
 
+## Templates
+
+Reusable templates for common outputs live in `templates/`. These provide consistent formatting for reports and improvement plans generated from validation results.
+
+### Available Templates
+
+| Template | Purpose |
+|----------|---------|
+| `improvement-plan.md` | Unified improvement plan combining recommendations from multiple skill frameworks |
+
+### Improvement Plan Template
+
+After validating a session against multiple skill frameworks, use this template to synthesize recommendations into a single actionable plan.
+
+**Key sections:**
+- **Integrated Recommendations** — Priority table mapping improvements to source principles across frameworks
+- **Improvement Details** — Individual improvements with components, rationale, and framework connections
+- **Revised Session Flow** — Tree-diagram visualization of the improved session
+- **Summary** — Thematic overview of changes and expected benefits
+
+**Usage:** Copy the template structure and fill in based on validation results. The template includes guidelines for adapting to different numbers of frameworks and recommended improvement counts.
+
 ## MCP Tools Reference
 
 ### Coaching Skills Server
@@ -356,6 +379,7 @@ Action types: `pass`, `run`, `dribble`, `shot`, `curved_run`.
 
 - **Skill definitions** (`skills/**/*.json`) are gitignored because they contain descriptions derived from copyrighted source materials. Skills can be organized in subdirectories.
 - **Drafts** (`drafts/`) contains skill proposals and draft definitions during the assisted creation workflow. Contents are gitignored.
+- **Templates** (`templates/`) contains reusable output templates. These are version-controlled and available as starting points for reports and improvement plans.
 - **Resources** (`resources/`), **samples** (`samples/`), and **output** (`output/`) folders are tracked as empty directories via `.gitkeep` files; their contents are gitignored.
 - **Vector indices** (`data/`) are gitignored and reproducible via `npm run build-index`.
 - The MCP server discovers skills dynamically at startup — no code changes needed to add or remove skills.
