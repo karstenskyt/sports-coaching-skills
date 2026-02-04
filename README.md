@@ -103,6 +103,8 @@ Supported formats:
 | Format | Description |
 |--------|-------------|
 | `.pdf` | Books, articles, manuals |
+| `.txt`, `.md` | Plain text files and markdown documents |
+| `.rtf` | Rich Text Format files (binary data automatically filtered) |
 | `.srt` | SubRip subtitles (from speech-to-text transcription) |
 | `.vtt` | WebVTT subtitles |
 | `.json` | JSON arrays of `[{start, end, text}, ...]` |
@@ -116,6 +118,8 @@ npm run build-index -- --skill goalkeeping-coach
 This reads all files in `resources/goalkeeping-coach/`, chunks the text (500 words, 50-word overlap), embeds each chunk with [all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2) (384-dim vectors), and writes the index to `data/goalkeeping-coach/`.
 
 The embedding model (~90 MB) downloads automatically on first run.
+
+**RTF processing:** RTF files often contain embedded binary data (images, theme data, color schemes) that can bloat the index. The indexer automatically strips this data, keeping only readable text content.
 
 ### Step 3: Write the skill definition
 

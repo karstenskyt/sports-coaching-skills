@@ -93,10 +93,83 @@ interface Segment {
 }
 
 const TRANSCRIPT_EXTENSIONS = [".srt", ".vtt", ".json", ".segments"];
+const TEXT_EXTENSIONS = [".txt", ".md"];
+const RTF_EXTENSIONS = [".rtf"];
 
 function isTranscriptFile(filename: string): boolean {
   const lower = filename.toLowerCase();
   return TRANSCRIPT_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function isTextFile(filename: string): boolean {
+  const lower = filename.toLowerCase();
+  return TEXT_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function isRtfFile(filename: string): boolean {
+  const lower = filename.toLowerCase();
+  return RTF_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function stripRtf(rtfContent: string): string {
+  // RTF to plain text converter with binary data filtering
+  let text = rtfContent;
+
+  // FIRST: Remove embedded binary/hex data blocks (themedata, datastore, blipuid, etc.)
+  // These contain long hexadecimal strings that bloat the output
+  text = text.replace(/\{\\\*\\(themedata|datastore|colorschememapping|blipuid|panose)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/gi, "");
+
+  // Remove picture/object data (contains hex image data)
+  text = text.replace(/\{\\pict[^{}]*(?:\{[^{}]*\}[^{}]*)*[0-9a-f\s]{100,}\}/gi, "");
+
+  // Remove any remaining long hex sequences (>50 consecutive hex chars)
+  text = text.replace(/[0-9a-f]{50,}/gi, "");
+
+  // Remove RTF header sections
+  text = text
+    .replace(/\{\\\*\\[a-z]+[^{}]*\}/gi, "")
+    .replace(/\\fonttbl[^}]*\}/gi, "")
+    .replace(/\\colortbl[^}]*\}/gi, "")
+    .replace(/\\stylesheet[^}]*\}/gi, "")
+    .replace(/\\latentstyles[^}]*\}/gi, "")
+    .replace(/\\pgptbl[^}]*\}/gi, "")
+    .replace(/\\rsidtbl[^}]*\}/gi, "");
+
+  // Replace common RTF escape sequences
+  text = text
+    .replace(/\\par\b/gi, "\n")
+    .replace(/\\line\b/gi, "\n")
+    .replace(/\\tab\b/gi, "\t")
+    .replace(/\\'([0-9a-f]{2})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/\\rquote\b/g, "'")
+    .replace(/\\lquote\b/g, "'")
+    .replace(/\\rdblquote\b/g, '"')
+    .replace(/\\ldblquote\b/g, '"')
+    .replace(/\\emdash\b/g, "—")
+    .replace(/\\endash\b/g, "–")
+    .replace(/\\bullet\b/g, "•")
+    .replace(/\\~\b/g, " ")
+    .replace(/\\_\b/g, "-");
+
+  // Remove RTF control words (backslash followed by letters and optional number)
+  text = text.replace(/\\[a-z]+(-?\d+)?\s?/gi, "");
+
+  // Remove remaining braces and clean up
+  text = text
+    .replace(/[{}]/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  // Final cleanup: remove lines that are mostly non-text characters
+  const lines = text.split("\n");
+  const cleanLines = lines.filter((line) => {
+    if (line.length < 3) return true; // Keep short lines
+    const alphaCount = (line.match(/[a-zA-Z]/g) || []).length;
+    return alphaCount / line.length > 0.3; // Keep lines with >30% letters
+  });
+
+  return cleanLines.join("\n").trim();
 }
 
 function parseSrtTimestamp(ts: string): number {
@@ -192,6 +265,80 @@ function chunkTranscript(
   return chunks;
 }
 
+// --- RTF ingestion ---
+
+function ingestRtfFile(filePath: string): Chunk[] {
+  const fileName = path.basename(filePath);
+  console.log(`  Reading RTF: ${fileName}`);
+
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const plainText = stripRtf(raw);
+  console.log(`    ${plainText.length} characters (extracted)`);
+
+  // Chunk the text similarly to other text files
+  const chunks: Chunk[] = [];
+  const words = plainText.split(/\s+/).filter((w) => w.length > 0);
+  const chunkSize = 500;
+  const overlap = 50;
+
+  for (let i = 0; i < words.length; i += chunkSize - overlap) {
+    const slice = words.slice(i, i + chunkSize);
+    const text = slice.join(" ");
+
+    if (text.trim().length < 50) continue;
+
+    chunks.push({
+      text,
+      chapter: fileName.replace(/\.rtf$/i, ""),
+      page: Math.floor(i / chunkSize) + 1,
+      source: fileName,
+    });
+  }
+
+  return chunks;
+}
+
+// --- Plain text ingestion ---
+
+function ingestTextFile(filePath: string): Chunk[] {
+  const fileName = path.basename(filePath);
+  console.log(`  Reading text file: ${fileName}`);
+
+  const raw = fs.readFileSync(filePath, "utf-8");
+  console.log(`    ${raw.length} characters`);
+
+  // Chunk the text file similarly to PDFs but without page tracking
+  const chunks: Chunk[] = [];
+  const words = raw.split(/\s+/);
+  const chunkSize = 500;
+  const overlap = 50;
+
+  let currentSection = "Document";
+  const sectionPattern = /^(#+\s+.*|[A-Z][A-Za-z\s]+\n[-=]+)/m;
+
+  for (let i = 0; i < words.length; i += chunkSize - overlap) {
+    const slice = words.slice(i, i + chunkSize);
+    const text = slice.join(" ");
+
+    if (text.trim().length < 50) continue;
+
+    // Try to detect section headers
+    const match = text.match(sectionPattern);
+    if (match) {
+      currentSection = match[0].substring(0, 80).replace(/[-=\n]/g, "").trim();
+    }
+
+    chunks.push({
+      text,
+      chapter: currentSection,
+      page: Math.floor(i / chunkSize) + 1,
+      source: fileName,
+    });
+  }
+
+  return chunks;
+}
+
 // --- PDF ingestion ---
 
 async function ingestPdf(filePath: string): Promise<Chunk[]> {
@@ -260,15 +407,22 @@ async function main() {
   const files = fs.readdirSync(resourcesDir);
   const pdfFiles = files.filter((f) => f.toLowerCase().endsWith(".pdf"));
   const transcriptFiles = files.filter((f) => isTranscriptFile(f));
+  const textFiles = files.filter((f) => isTextFile(f));
+  const rtfFiles = files.filter((f) => isRtfFile(f));
 
-  if (pdfFiles.length === 0 && transcriptFiles.length === 0) {
+  if (pdfFiles.length === 0 && transcriptFiles.length === 0 && textFiles.length === 0 && rtfFiles.length === 0) {
     console.error(`No supported files found in ${resourcesDir}`);
-    console.error(`Supported: .pdf, .srt, .vtt, .json, .segments`);
+    console.error(`Supported: .pdf, .srt, .vtt, .json, .segments, .txt, .md, .rtf`);
     process.exit(1);
   }
 
   console.log(`\nBuilding index for skill: ${skill}`);
-  console.log(`Resources: ${pdfFiles.length} PDFs, ${transcriptFiles.length} transcripts`);
+  const fileTypes: string[] = [];
+  if (pdfFiles.length > 0) fileTypes.push(`${pdfFiles.length} PDFs`);
+  if (transcriptFiles.length > 0) fileTypes.push(`${transcriptFiles.length} transcripts`);
+  if (textFiles.length > 0) fileTypes.push(`${textFiles.length} text files`);
+  if (rtfFiles.length > 0) fileTypes.push(`${rtfFiles.length} RTF files`);
+  console.log(`Resources: ${fileTypes.join(", ")}`);
 
   // Ingest all files
   let allChunks: Chunk[] = [];
@@ -280,6 +434,16 @@ async function main() {
 
   for (const tf of transcriptFiles) {
     const chunks = ingestTranscript(path.join(resourcesDir, tf));
+    allChunks.push(...chunks);
+  }
+
+  for (const txtf of textFiles) {
+    const chunks = ingestTextFile(path.join(resourcesDir, txtf));
+    allChunks.push(...chunks);
+  }
+
+  for (const rtff of rtfFiles) {
+    const chunks = ingestRtfFile(path.join(resourcesDir, rtff));
     allChunks.push(...chunks);
   }
 
@@ -335,7 +499,8 @@ async function main() {
   }
 
   console.log(`\nDone! Index written to ${indexPath}`);
-  console.log(`${allChunks.length} chunks from ${pdfFiles.length + transcriptFiles.length} files`);
+  const totalFiles = pdfFiles.length + transcriptFiles.length + textFiles.length + rtfFiles.length;
+  console.log(`${allChunks.length} chunks from ${totalFiles} files`);
   console.log(`\nNext: ensure skills/${skill}.json exists, then rebuild the MCP server with 'npm run build'`);
 }
 
