@@ -38,7 +38,7 @@ sports-coaching-skills/
 | Server | Language | Purpose |
 |--------|----------|---------|
 | `coaching-skills` | Node.js / TypeScript | Semantic search, principle listing, session validation |
-| `soccer-diagrams` | Python | Tactical diagrams, spatial evaluation, PDF compilation |
+| `soccer-diagrams` | Python | Tactical diagrams, spatial evaluation, PDF generation, table alignment |
 
 The coaching-skills server dynamically discovers all skill definitions in `skills/` and its subdirectories at startup and registers three tools per skill. Multiple skills can share a single vector index via the `sharedIndex` property.
 
@@ -376,7 +376,10 @@ This ensures coaching language principles are evaluated against actual coach spe
 |------|------------|---------|
 | `render_tactical_diagram` | `drill` (DrillDefinition object), `format` (png/pdf) | Path to saved image |
 | `evaluate_session_plan` | `pitch_length`, `pitch_width`, `num_players`, `activities[]` | Spatial metrics and recommendations |
-| `compile_to_pdf` | `title`, `sections[]` ({type, content, caption}), `output_path` | Path to saved PDF |
+| `compile_to_pdf` | `title`, `sections[]` ({type, content, caption}), `output_path` | Path to styled PDF |
+| `text_to_pdf` | `input_path`, `output_path` (optional) | Path to fixed-width PDF |
+| `fix_table_alignment` | `input_path`, `in_place` (default true) | Fix status and warnings |
+| `format_text_file` | `input_path`, `in_place`, `max_width` (optional) | Fix status and warnings |
 
 **DrillDefinition schema:**
 
@@ -394,6 +397,12 @@ This ensures coaching language principles are evaluated against actual coach spe
 ```
 
 Action types: `pass`, `run`, `dribble`, `shot`, `curved_run`.
+
+**PDF tools:**
+
+- `text_to_pdf`: Converts text files with ASCII tables to PDF using a fixed-width font (Consolas on Windows) that preserves box-drawing characters. Auto-switches to landscape mode when lines exceed 130 characters. Uses version numbers to avoid overwriting (e.g., `file_v1.pdf`, `file_v2.pdf`).
+- `fix_table_alignment`: Fixes misaligned columns in ASCII tables by matching data row separators to border positions. Reports unfixable issues (content too long for columns) as warnings.
+- `format_text_file`: Combines table alignment fixing with line wrapping for non-table content. Wraps lines to fit within the widest table in the file.
 
 **Area-per-player thresholds** for `evaluate_session_plan`:
 
